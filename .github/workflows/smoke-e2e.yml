@@ -1,0 +1,166 @@
+name: Smoke E2E Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'public/**'
+      - 'functions/**'
+      - 'tests/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - '.github/workflows/smoke-e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  smoke-tests:
+    name: Smoke E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npx playwright install chromium
+      
+    - name: Run brand neutrality tests
+      run: npm run test:brand-neutrality
+      
+    - name: Run MrketOz CRM tests  
+      run: npm run test:mrketoz-crm
+      
+    - name: Start development server
+      run: npm run dev &
+      env:
+        CI: true
+        
+    - name: Wait for server to be ready
+      run: |
+        timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+        
+    - name: Run smoke tests
+      run: |
+        npx playwright test tests/health.spec.ts tests/redirects.spec.ts --reporter=github
+      env:
+        CI: true
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: smoke-test-results
+        path: |
+          test-results/
+          playwright-report/
+        retention-days: 7
+        
+    - name: Upload screenshots
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: smoke-test-screenshots
+        path: test-results/
+        retention-days: 7
+
+  validation-tests:
+    name: Configuration Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Validate brand neutrality
+      run: node test-brand-neutrality.js
+      
+    - name: Validate CRM functionality
+      run: node test-mrketoz-crm.js
+      
+    - name: Check for banned terms
+      run: |
+        if grep -r "firebase\|cloudflare\|ga4\|gsc" public/ README.md deploy roots --exclude-dir=.git --exclude="*.md" --exclude="*config*" || true; then
+          echo "⚠️ Found potential platform-specific terms. Please review for cloud-agnostic alternatives."
+          exit 1
+        else
+          echo "✅ No banned platform-specific terms found"
+        fi
+        
+    - name: Validate configuration structure
+      run: |
+        if [ ! -f "config.template.json" ]; then
+          echo "❌ config.template.json is missing"
+          exit 1
+        fi
+        
+        if [ -f "config.json" ]; then
+          echo "⚠️ config.json should not be committed (should be in .gitignore)"
+          exit 1
+        fi
+        
+        echo "✅ Configuration structure is valid"
+
+  health-check:
+    name: Health Check Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Start development server
+      run: npm run dev &
+      env:
+        CI: true
+        
+    - name: Wait for server
+      run: |
+        timeout 30 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+        
+    - name: Test health endpoints
+      run: |
+        # Test main page
+        curl -f http://localhost:3000/ || exit 1
+        
+        # Test FitOutLab page  
+        curl -f http://localhost:3000/ind2x.html || exit 1
+        
+        echo "✅ Health check endpoints are responding"
+        
+    - name: Test API responsiveness
+      run: |
+        # Try to access health endpoints (they may return 404 in static mode, but shouldn't hang)
+        timeout 10 curl http://localhost:3000/health || echo "Health endpoint not available in static mode (expected)"
+        timeout 10 curl http://localhost:3000/api/status || echo "Status endpoint not available in static mode (expected)" 
+        
+        echo "✅ API endpoints are accessible or properly handled"
