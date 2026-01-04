@@ -1,0 +1,261 @@
+name: Email Setup Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Domain to verify (default: designfitout.com)'
+        required: false
+        default: 'designfitout.com'
+        type: string
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'scripts/verify_email_setup.sh'
+      - 'functions/.well-known/mta-sts.txt.ts'
+      - '.github/workflows/email-setup-verify.yml'
+
+jobs:
+  verify-email-setup:
+    name: Verify Email Configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install DNS utilities
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y dnsutils curl openssl jq
+
+      - name: Display tool versions
+        run: |
+          echo "### Tool Versions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- dig: $(dig -v 2>&1 | head -1)" >> $GITHUB_STEP_SUMMARY
+          echo "- curl: $(curl --version | head -1)" >> $GITHUB_STEP_SUMMARY
+          echo "- openssl: $(openssl version)" >> $GITHUB_STEP_SUMMARY
+          echo "- jq: $(jq --version)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Make verification script executable
+        run: chmod +x ./scripts/verify_email_setup.sh
+
+      - name: Run email setup verification
+        id: verify
+        run: |
+          echo "## Email Setup Verification Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Domain:** ${{ github.event.inputs.domain || 'designfitout.com' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run verification and capture output
+          ./scripts/verify_email_setup.sh 2>&1 | tee verification.log
+          
+          # Store exit code
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Format verification output for summary
+        if: always()
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Detailed Verification Output" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat verification.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Check critical DNS records
+        if: always()
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick DNS Record Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          DOMAIN="${{ github.event.inputs.domain || 'designfitout.com' }}"
+          
+          # MX Records
+          echo "#### MX Records" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          dig +short MX "$DOMAIN" | sort >> $GITHUB_STEP_SUMMARY || echo "No MX records found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # SPF Record
+          echo "#### SPF Record" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          dig +short TXT "$DOMAIN" | grep -i "v=spf1" >> $GITHUB_STEP_SUMMARY || echo "No SPF record found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # DMARC Record
+          echo "#### DMARC Record" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          dig +short TXT "_dmarc.$DOMAIN" >> $GITHUB_STEP_SUMMARY || echo "No DMARC record found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # MTA-STS TXT
+          echo "#### MTA-STS TXT Record" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          dig +short TXT "_mta-sts.$DOMAIN" >> $GITHUB_STEP_SUMMARY || echo "No MTA-STS TXT record found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Test MTA-STS policy endpoint
+        if: always()
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### MTA-STS Policy Endpoint Test" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          DOMAIN="${{ github.event.inputs.domain || 'designfitout.com' }}"
+          MTA_STS_URL="https://mta-sts.$DOMAIN/.well-known/mta-sts.txt"
+          
+          echo "**URL:** $MTA_STS_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Test HTTP headers
+          echo "#### HTTP Headers" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          curl -sI "$MTA_STS_URL" 2>&1 | head -20 >> $GITHUB_STEP_SUMMARY || echo "Failed to fetch headers" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Test policy content
+          echo "#### Policy Content" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          curl -s "$MTA_STS_URL" 2>&1 >> $GITHUB_STEP_SUMMARY || echo "Failed to fetch policy" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Optional - Test with Cloudflare API
+        if: always() && secrets.CF_API_TOKEN != ''
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          ZONE_ID: ${{ secrets.ZONE_ID }}
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Cloudflare API DNS Record Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ -z "$ZONE_ID" ]]; then
+            echo "⚠️ ZONE_ID secret not set - skipping API validation" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          
+          # Fetch DNS records via Cloudflare API
+          echo "#### Cloudflare DNS Records" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records?type=MX" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" | jq '.result[] | {name: .name, type: .type, content: .content, priority: .priority}' >> $GITHUB_STEP_SUMMARY 2>&1 || echo "Failed to fetch records" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload verification log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-verification-log-${{ github.run_id }}
+          path: verification.log
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Create verification badge
+        if: always()
+        run: |
+          EXIT_CODE="${{ steps.verify.outputs.exit_code }}"
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "$EXIT_CODE" == "0" ]]; then
+            echo "## ✅ Verification Passed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All email configuration checks passed successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Verification Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Some email configuration checks failed. Review the output above." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the verification output above" >> $GITHUB_STEP_SUMMARY
+          echo "2. Fix any failing checks" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run \`./scripts/cf_dns_setup.sh\` if DNS records are missing" >> $GITHUB_STEP_SUMMARY
+          echo "4. Refer to \`docs/GoogleWorkspaceSetup.md\` for detailed instructions" >> $GITHUB_STEP_SUMMARY
+          echo "5. Deploy MTA-STS policy if endpoint is not accessible" >> $GITHUB_STEP_SUMMARY
+
+      - name: Post verification status
+        if: failure()
+        run: |
+          echo "::error::Email setup verification failed. Check the logs for details."
+          exit 1
+
+  # Optional job to test MTA-STS policy function locally
+  test-mta-sts-function:
+    name: Test MTA-STS Function
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Validate TypeScript syntax
+        run: |
+          echo "## MTA-STS Function Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ -f "functions/.well-known/mta-sts.txt.ts" ]]; then
+            echo "✅ MTA-STS function file exists" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Check for required exports
+            if grep -q "onRequestGet" "functions/.well-known/mta-sts.txt.ts"; then
+              echo "✅ \`onRequestGet\` export found" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ \`onRequestGet\` export not found" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Check policy content
+            if grep -q "version: STSv1" "functions/.well-known/mta-sts.txt.ts"; then
+              echo "✅ MTA-STS policy version present" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ MTA-STS policy version missing" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if grep -q "mode: enforce" "functions/.well-known/mta-sts.txt.ts"; then
+              echo "✅ MTA-STS mode set to enforce" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ MTA-STS mode not set to enforce" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Check for Google MX entries
+            MX_COUNT=$(grep -c "mx: .*google\.com" "functions/.well-known/mta-sts.txt.ts" || echo "0")
+            echo "✅ Found $MX_COUNT Google MX entries" >> $GITHUB_STEP_SUMMARY
+            
+          else
+            echo "❌ MTA-STS function file not found" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Display function content
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### MTA-STS Function Code" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```typescript' >> $GITHUB_STEP_SUMMARY
+          cat functions/.well-known/mta-sts.txt.ts >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
