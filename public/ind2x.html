@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FitOutLab Capsule v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f5f8fb;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 540px;
+      margin: 48px auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      padding: 40px 32px;
+    }
+    h1 {
+      color: #1a237e;
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+    ul {
+      margin: 24px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    ul li {
+      margin-bottom: 12px;
+      padding-left: 16px;
+      position: relative;
+    }
+    ul li:before {
+      content: "•";
+      color: #3949ab;
+      position: absolute;
+      left: 0;
+    }
+    .domain, .cred, .deploy {
+      margin-bottom: 16px;
+    }
+    .domain strong, .cred strong, .deploy strong {
+      color: #1976d2;
+    }
+    .footer {
+      margin-top: 32px;
+      text-align: center;
+      color: #789;
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FitOutLab Capsule</h1>
+    <div class="domain">
+      <strong>🌐 Domain:</strong>
+      <ul>
+        <li>Primary: <code>fitoutlab.app</code></li>
+        <li>CNAME: <code>www.fitoutlab.app → fitoutlab.app</code> (CDN proxy enabled)</li>
+      </ul>
+    </div>
+    <div class="modules">
+      <strong>🧱 Modules:</strong>
+      <ul>
+        <li>FIX24: Diagnostic flows, BOQ normalization</li>
+        <li>SpecLab: Spec-driven schema overlays</li>
+        <li>SeveNue: Dispatch publishing, quotation logic</li>
+      </ul>
+    </div>
+    <div class="cred">
+      <strong>🔐 Credential Hygiene:</strong>
+      <ul>
+        <li>Secrets vault linked via symbolic path</li>
+        <li>Audit logs injected for every fix and export</li>
+        <li>Cloud CLI authenticated as <code>this4arun@gmail.com</code></li>
+      </ul>
+    </div>
+    <div class="deploy">
+      <strong>🚀 Deployment:</strong>
+      <ul>
+        <li>Cloud Hosting + Serverless Functions</li>
+        <li>Global clones: 🇸🇦 🇿🇦 🇵🇭 🇨🇴 🇹🇷 🇧🇷 🇪🇬 🇮🇳</li>
+        <li>Runtime export packaging per territory</li>
+      </ul>
+    </div>
+    <div class="smoke">
+      <strong>🧪 Smoke Tests:</strong>
+      <ul>
+        <li>DNS: <code>fitoutlab.app</code> + <code>designfitout.com</code></li>
+        <li>Search indexing + Analytics debug view validated</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; 2025 FitOutLab Capsule - All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
