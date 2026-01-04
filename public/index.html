@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src 'self' https://www.youtube.com https://youtube.com; connect-src 'self' https:;">
+    <title>Premium Design & Fitout Solutions</title>
+    <meta name="description" content="Experience premium design and fitout solutions with cutting-edge visualization and strategic analysis.">
+    
+    <!-- Domain Configuration Script - Must load first -->
+    <script src="domain-config.js"></script>
+    
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #3949ab;
+            --accent-color: #1976d2;
+            --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-gradient);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Glassmorphism Effect */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px var(--shadow-color);
+        }
+
+        /* Dynamic Background Animation */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--background-gradient);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+            25% { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+            50% { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+            75% { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        }
+
+        /* Header Section */
+        .header {
+            padding: 2rem 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from { text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); }
+            to { text-shadow: 0 5px 20px rgba(255, 255, 255, 0.4); }
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            font-weight: 300;
+        }
+
+        /* Video Section */
+        .video-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .video-wrapper:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 20px;
+        }
+
+        /* Edge Glow Effect */
+        .edge-glow {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff006e, #8338ec, #3a86ff, #06ffa5);
+            border-radius: 22px;
+            opacity: 0;
+            animation: edgeGlow 4s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes edgeGlow {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Features Section */
+        .features {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Competitor Analysis Module */
+        .analysis-module {
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 2rem 1rem;
+        }
+
+        .analysis-dashboard {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .analysis-dashboard h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00f2fe;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* SVG Line Art */
+        .svg-decoration {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .svg-line {
+            stroke: #ffffff;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 8s ease-in-out infinite;
+        }
+
+        @keyframes drawLine {
+            0%, 20% { stroke-dashoffset: 1000; }
+            80%, 100% { stroke-dashoffset: 0; }
+        }
+
+        /* Scroll Animations */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.6s ease;
+        }
+
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Narration Overlay */
+        .narration-overlay {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1rem;
+            max-width: 300px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease;
+            z-index: 1000;
+        }
+
+        .narration-overlay.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .narration-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .narration-progress {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .narration-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .narration-overlay {
+                bottom: 1rem;
+                right: 1rem;
+                left: 1rem;
+                max-width: none;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+
+    <!-- Header Section -->
+    <header class="header scroll-reveal">
+        <h1>Designfitout.com</h1>
+        <p>Premium Design & Fitout Solutions with Nobel-tier Performance</p>
+    </header>
+
+    <!-- Video Section -->
+    <section class="video-container scroll-reveal">
+        <div class="video-wrapper glass">
+            <div class="edge-glow"></div>
+            <iframe 
+                id="main-video"
+                src="https://www.youtube.com/embed/3VYlYMnONS8?enablejsapi=1&rel=0&showinfo=0&controls=1&modestbranding=1&origin=DOMAIN_PLACEHOLDER" 
+                title="Design & Fitout Demo Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin">
+            </iframe>
+            
+            <!-- SVG Line Art Decoration -->
+            <svg class="svg-decoration" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                <path class="svg-line" d="M50,50 Q200,10 350,50 T350,150 Q300,200 200,180 T50,150 Z"/>
+                <path class="svg-line" d="M100,100 L300,100 L300,200 L100,200 Z"/>
+                <circle class="svg-line" cx="200" cy="150" r="30"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="feature-card glass scroll-reveal">
+            <span class="feature-icon">🎨</span>
+            <h3>Glassmorphism Design</h3>
+            <p>Modern visual effects with glass-like transparency, backdrop filters, and dynamic lighting that creates immersive user experiences.</p>
+        </div>
+        
+        <div class="feature-card glass scroll-reveal">
+            <span class="feature-icon">⚡</span>
+            <h3>Dynamic Animations</h3>
+            <p>Scroll-triggered animations, interactive pulse effects, and smooth transitions that respond to user interactions in real-time.</p>
+        </div>
+        
+        <div class="feature-card glass scroll-reveal">
+            <span class="feature-icon">📊</span>
+            <h3>Strategic Analysis</h3>
+            <p>Real-time competitor benchmarking and performance monitoring to ensure Nobel-tier excellence in every aspect.</p>
+        </div>
+        
+        <div class="feature-card glass scroll-reveal">
+            <span class="feature-icon">🔮</span>
+            <h3>Edge Glow Effects</h3>
+            <p>Stunning visual enhancement with animated edge lighting and gradient overlays that create depth and visual appeal.</p>
+        </div>
+    </section>
+
+    <!-- Competitor Analysis Module -->
+    <section class="analysis-module scroll-reveal">
+        <div class="analysis-dashboard glass">
+            <h2>Real-time Strategic Analysis</h2>
+            <p>Continuously benchmarking against competitors to maintain Nobel-tier performance standards</p>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <span class="metric-value" id="performanceScore">95.7</span>
+                    <span class="metric-label">Performance Score</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value" id="competitorRank">#1</span>
+                    <span class="metric-label">Market Position</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value" id="innovationIndex">8.9</span>
+                    <span class="metric-label">Innovation Index</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value" id="userEngagement">92%</span>
+                    <span class="metric-label">User Engagement</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Narration Overlay -->
+    <div class="narration-overlay" id="narrationOverlay">
+        <div class="narration-text" id="narrationText">
+            Welcome to Designfitout.com - Experience premium design solutions
+        </div>
+        <div class="narration-progress">
+            <div class="narration-progress-bar" id="narrationProgress"></div>
+        </div>
+    </div>
+
+    <script>
+        // Main Application Controller
+        class DesignFitoutApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupScrollAnimations();
+                this.setupNarrationSystem();
+                this.setupMetricsAnimation();
+                this.setupVideoTracking();
+                this.hideLoadingOverlay();
+            }
+
+            // Hide loading overlay when page is ready
+            hideLoadingOverlay() {
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        document.getElementById('loadingOverlay').classList.add('hidden');
+                    }, 1000);
+                });
+            }
+
+            // Scroll-triggered animations using Intersection Observer
+            setupScrollAnimations() {
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('revealed');
+                        }
+                    });
+                }, observerOptions);
+
+                document.querySelectorAll('.scroll-reveal').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+
+            // Dynamic narration system
+            setupNarrationSystem() {
+                const narrations = [
+                    { text: "Welcome to Designfitout.com - Experience premium design solutions", duration: 4000 },
+                    { text: "Watch our demo showcasing cutting-edge visualization techniques", duration: 5000 },
+                    { text: "Glassmorphism effects create stunning visual depth", duration: 4000 },
+                    { text: "Real-time competitor analysis ensures Nobel-tier performance", duration: 5000 },
+                    { text: "Interactive animations respond to your every interaction", duration: 4000 }
+                ];
+
+                let currentIndex = 0;
+                const overlay = document.getElementById('narrationOverlay');
+                const textEl = document.getElementById('narrationText');
+                const progressBar = document.getElementById('narrationProgress');
+
+                const showNarration = () => {
+                    const narration = narrations[currentIndex];
+                    textEl.textContent = narration.text;
+                    overlay.classList.add('active');
+                    
+                    // Animate progress bar
+                    progressBar.style.width = '0%';
+                    setTimeout(() => {
+                        progressBar.style.width = '100%';
+                        progressBar.style.transition = `width ${narration.duration}ms linear`;
+                    }, 100);
+
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                        currentIndex = (currentIndex + 1) % narrations.length;
+                        setTimeout(showNarration, 2000);
+                    }, narration.duration + 1000);
+                };
+
+                // Start narration system after initial load
+                setTimeout(showNarration, 3000);
+            }
+
+            // Animated metrics with real-time updates
+            setupMetricsAnimation() {
+                const metrics = {
+                    performanceScore: { element: 'performanceScore', target: 95.7, current: 85.0 },
+                    innovationIndex: { element: 'innovationIndex', target: 8.9, current: 7.2 },
+                    userEngagement: { element: 'userEngagement', target: 92, current: 78, suffix: '%' }
+                };
+
+                Object.keys(metrics).forEach(key => {
+                    const metric = metrics[key];
+                    const element = document.getElementById(metric.element);
+                    const increment = (metric.target - metric.current) / 100;
+                    
+                    let current = metric.current;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= metric.target) {
+                            current = metric.target;
+                            clearInterval(timer);
+                        }
+                        
+                        const displayValue = metric.suffix ? 
+                            Math.round(current) + metric.suffix : 
+                            current.toFixed(1);
+                        element.textContent = displayValue;
+                    }, 50);
+                });
+
+                // Simulate real-time updates
+                setInterval(() => {
+                    Object.keys(metrics).forEach(key => {
+                        const metric = metrics[key];
+                        const element = document.getElementById(metric.element);
+                        const variation = (Math.random() - 0.5) * 2;
+                        const newValue = metric.target + variation;
+                        
+                        const displayValue = metric.suffix ? 
+                            Math.round(newValue) + metric.suffix : 
+                            newValue.toFixed(1);
+                        element.textContent = displayValue;
+                    });
+                }, 10000);
+            }
+
+            // Video interaction tracking
+            setupVideoTracking() {
+                // YouTube API tracking would be implemented here
+                console.log('Video tracking initialized for competitor analysis');
+                
+                // Simulate video engagement tracking
+                const videoWrapper = document.querySelector('.video-wrapper');
+                videoWrapper.addEventListener('mouseenter', () => {
+                    console.log('Video engagement: Hover detected');
+                });
+                
+                videoWrapper.addEventListener('click', () => {
+                    console.log('Video engagement: Click detected');
+                });
+            }
+        }
+
+        // Initialize application when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new DesignFitoutApp();
+        });
+
+        // Competitor Analysis Module
+        class CompetitorAnalysis {
+            constructor() {
+                this.analysisData = {
+                    competitors: ['competitor1.com', 'competitor2.com', 'competitor3.com'],
+                    metrics: ['performance', 'design', 'user_experience', 'innovation'],
+                    lastUpdate: new Date()
+                };
+                this.startRealTimeAnalysis();
+            }
+
+            startRealTimeAnalysis() {
+                // Simulate real-time competitor analysis
+                setInterval(() => {
+                    this.updateAnalysisData();
+                }, 30000); // Update every 30 seconds
+
+                console.log('Real-time competitor analysis started');
+            }
+
+            updateAnalysisData() {
+                // Simulate analysis updates
+                const insights = this.generateInsights();
+                console.log('Competitor Analysis Update:', insights);
+                
+                // Update UI metrics based on analysis
+                this.updateMetrics(insights);
+            }
+
+            generateInsights() {
+                return {
+                    performanceAdvantage: Math.random() * 10,
+                    designInnovation: Math.random() * 5,
+                    marketPosition: Math.floor(Math.random() * 3) + 1,
+                    timestamp: new Date()
+                };
+            }
+
+            updateMetrics(insights) {
+                // Update performance score based on competitive analysis
+                const performanceElement = document.getElementById('performanceScore');
+                if (performanceElement) {
+                    const newScore = 90 + insights.performanceAdvantage;
+                    performanceElement.textContent = newScore.toFixed(1);
+                }
+            }
+        }
+
+        // Initialize competitor analysis
+        document.addEventListener('DOMContentLoaded', () => {
+            new CompetitorAnalysis();
+        });
+    </script>
+</body>
+</html>

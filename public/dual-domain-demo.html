@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Domain Configuration Demo</title>
+    
+    <!-- Domain Configuration Script -->
+    <script src="domain-config.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        .domain-info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .enabled {
+            border-left: 4px solid #4caf50;
+        }
+
+        .disabled {
+            border-left: 4px solid #ff5722;
+            opacity: 0.6;
+        }
+
+        .config-display {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .domain-switcher {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .domain-button {
+            padding: 10px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .domain-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .domain-button.active {
+            background: var(--primary-color, #1976d2);
+            border-color: var(--primary-color, #1976d2);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #4caf50;
+        }
+
+        .status-offline {
+            background: #ff5722;
+        }
+
+        /* Domain-specific styles */
+        .domain-fitoutlab {
+            --primary-color: #1976d2;
+            --accent-color: #3949ab;
+        }
+
+        .domain-designfitout {
+            --primary-color: #2e7d32;
+            --accent-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="page-title">Dual Domain Configuration System</h1>
+        
+        <div class="domain-info" id="domain-info">
+            <h2>Current Configuration</h2>
+            <p><span class="status-indicator status-offline" id="status-indicator"></span>Loading domain configuration...</p>
+        </div>
+
+        <div class="domain-switcher">
+            <button class="domain-button" onclick="simulateDomain('fitoutlab')">FitOutLab Mode</button>
+            <button class="domain-button" onclick="simulateDomain('designfitout')">DesignFitout Mode</button>
+        </div>
+
+        <h2>Domain-Specific Features</h2>
+        <div class="feature-grid" id="feature-grid">
+            <!-- Features will be populated by JavaScript -->
+        </div>
+
+        <h2>Configuration Object</h2>
+        <div class="config-display" id="config-display">
+            Loading configuration...
+        </div>
+
+        <h2>Integration Guide</h2>
+        <div class="domain-info">
+            <h3>How to Use Dual Domain Configuration</h3>
+            <ol>
+                <li>Include <code>domain-config.js</code> in your HTML pages</li>
+                <li>Listen for the <code>domainConfigReady</code> event</li>
+                <li>Use <code>window.domainConfig</code> to access configuration</li>
+                <li>Check features with <code>isFeatureEnabled(featureName)</code></li>
+                <li>Get settings with <code>getSetting('path.to.setting')</code></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let currentConfig = null;
+        let currentDomain = null;
+
+        // Listen for domain configuration ready
+        document.addEventListener('domainConfigReady', (event) => {
+            currentConfig = event.detail.config;
+            currentDomain = event.detail.domain;
+            updateDisplay();
+        });
+
+        // Update the display with current configuration
+        function updateDisplay() {
+            if (!currentConfig || !currentDomain) return;
+
+            // Update title
+            const title = document.getElementById('page-title');
+            title.textContent = `${currentConfig.displayName} - Dual Domain System`;
+
+            // Update status indicator
+            const statusIndicator = document.getElementById('status-indicator');
+            statusIndicator.className = 'status-indicator status-online';
+
+            // Update domain info
+            const domainInfo = document.getElementById('domain-info');
+            domainInfo.innerHTML = `
+                <h2>Current Configuration</h2>
+                <p><span class="status-indicator status-online"></span><strong>Domain:</strong> ${currentConfig.domain}</p>
+                <p><strong>Mode:</strong> ${currentDomain}</p>
+                <p><strong>Display Name:</strong> ${currentConfig.displayName}</p>
+                <p><strong>Focus:</strong> ${currentConfig.content.focus}</p>
+                <p><strong>Theme:</strong> ${currentConfig.branding.theme}</p>
+            `;
+
+            // Update features
+            updateFeatureGrid();
+
+            // Update configuration display
+            updateConfigDisplay();
+
+            // Update active button
+            updateActiveButton();
+        }
+
+        // Update feature grid
+        function updateFeatureGrid() {
+            const featureGrid = document.getElementById('feature-grid');
+            
+            const features = [
+                { name: 'Capsule Interface', key: 'capsuleInterface' },
+                { name: 'Strategic Analysis', key: 'strategicAnalysis' },
+                { name: 'Drawing Automation', key: 'drawingAutomation' },
+                { name: 'Video Integration', key: 'videoIntegration' },
+                { name: 'Performance Monitoring', key: 'performanceMonitoring' },
+                { name: 'Visual Simulation', key: 'visualSimulation' }
+            ];
+
+            featureGrid.innerHTML = features.map(feature => {
+                const isEnabled = window.domainConfig?.isFeatureEnabled(feature.key) || 
+                                currentConfig.features?.[feature.key] || 
+                                currentConfig.shared?.features?.[feature.key];
+                
+                return `
+                    <div class="feature-card ${isEnabled ? 'enabled' : 'disabled'}">
+                        <h3>${feature.name}</h3>
+                        <p>Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}</p>
+                        <p>${isEnabled ? 'Available for current domain' : 'Not available for current domain'}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update configuration display
+        function updateConfigDisplay() {
+            const configDisplay = document.getElementById('config-display');
+            
+            const displayConfig = {
+                currentDomain: currentDomain,
+                domain: currentConfig.domain,
+                displayName: currentConfig.displayName,
+                branding: currentConfig.branding,
+                features: currentConfig.features,
+                content: currentConfig.content
+            };
+
+            configDisplay.textContent = JSON.stringify(displayConfig, null, 2);
+        }
+
+        // Update active button
+        function updateActiveButton() {
+            const buttons = document.querySelectorAll('.domain-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if ((currentDomain === 'fitoutlab' && button.textContent.includes('FitOutLab')) ||
+                    (currentDomain === 'designfitout' && button.textContent.includes('DesignFitout'))) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        // Simulate domain switching
+        function simulateDomain(domain) {
+            if (window.domainConfig && window.domainConfig.switchDomain) {
+                const success = window.domainConfig.switchDomain(domain);
+                if (success) {
+                    currentConfig = window.domainConfig.getConfig();
+                    currentDomain = domain;
+                    updateDisplay();
+                    console.log(`Switched to ${domain} mode`);
+                } else {
+                    console.error(`Failed to switch to ${domain} mode`);
+                }
+            } else {
+                console.warn('Domain configuration not loaded yet');
+            }
+        }
+
+        // Initialize display once everything is loaded
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.domainConfig) {
+                    currentConfig = window.domainConfig.getConfig();
+                    currentDomain = window.domainConfig.currentDomain;
+                    updateDisplay();
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
