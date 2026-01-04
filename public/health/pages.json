@@ -1,0 +1,33 @@
+{
+  "status": "healthy",
+  "service": "Designfitout Static Pages Health Check",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "pages": [
+    {
+      "url": "/",
+      "path": "/index.html",
+      "status": "active",
+      "description": "Main landing page with video integration"
+    },
+    {
+      "url": "/ind2x.html",
+      "path": "/ind2x.html", 
+      "status": "active",
+      "description": "FitOutLab capsule interface"
+    }
+  ],
+  "features": [
+    "Video Integration",
+    "Strategic Analysis",
+    "Glassmorphism Design",
+    "Responsive Layout"
+  ],
+  "domains": {
+    "primary": "fitoutlab.app",
+    "secondary": "designfitout.com"
+  },
+  "cache": {
+    "enabled": true,
+    "maxAge": 3600
+  }
+}

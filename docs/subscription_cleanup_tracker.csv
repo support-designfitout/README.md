@@ -1,0 +1,21 @@
+Subscription ID,Service Name,Provider,Status,Created Date,Renewal Date,Cost per Month,Category,Priority,Action Required,Notes,Last Updated,Owner
+SUB-001,Cloud Hosting,Cloud Provider,Active,2024-01-01,2025-01-01,25.00,Infrastructure,High,None,Primary hosting service,2024-01-01,DevOps Team
+SUB-002,CDN Service,CDN Provider,Active,2024-01-15,2025-01-15,15.00,Infrastructure,High,None,Content delivery network,2024-01-15,DevOps Team
+SUB-003,Analytics Platform,Analytics Provider,Active,2024-02-01,2025-02-01,10.00,Monitoring,Medium,None,Website analytics,2024-02-01,Marketing Team
+SUB-004,Email Service,Email Provider,Active,2024-02-15,2025-02-15,20.00,Communication,Medium,None,Transactional emails,2024-02-15,Development Team
+SUB-005,Database Service,DB Provider,Active,2024-03-01,2025-03-01,50.00,Infrastructure,High,None,Primary database,2024-03-01,DevOps Team
+SUB-006,Monitoring Tool,Monitoring Provider,Active,2024-03-15,2025-03-15,30.00,Monitoring,Medium,Review usage,Performance monitoring,2024-03-15,DevOps Team
+SUB-007,Backup Service,Backup Provider,Active,2024-04-01,2025-04-01,18.00,Infrastructure,High,None,Automated backups,2024-04-01,DevOps Team
+SUB-008,CI/CD Platform,CI/CD Provider,Active,2024-04-15,2025-04-15,0.00,Development,High,None,Free tier - monitor usage,2024-04-15,Development Team
+SUB-009,Design Tool,Design Provider,Review,2024-05-01,2025-05-01,12.00,Design,Low,Review necessity,Graphics and mockups,2024-05-01,Design Team
+SUB-010,Project Management,PM Provider,Active,2024-05-15,2025-05-15,22.00,Collaboration,Medium,None,Team coordination,2024-05-15,Management Team
+SUB-011,Code Quality,Quality Provider,Active,2024-06-01,2025-06-01,8.00,Development,Low,None,Code analysis,2024-06-01,Development Team
+SUB-012,Security Scanner,Security Provider,Active,2024-06-15,2025-06-15,35.00,Security,High,None,Vulnerability scanning,2024-06-15,Security Team
+SUB-013,Documentation,Docs Provider,Review,2024-07-01,2025-07-01,15.00,Documentation,Low,Evaluate alternatives,API documentation,2024-07-01,Development Team
+SUB-014,Testing Platform,Test Provider,Active,2024-07-15,2025-07-15,40.00,Development,High,None,E2E testing infrastructure,2024-07-15,QA Team
+SUB-015,Domain Registration,Domain Provider,Active,2024-08-01,2025-08-01,12.00,Infrastructure,High,None,Primary domain,2024-08-01,DevOps Team
+SUB-016,SSL Certificate,SSL Provider,Active,2024-08-15,2025-08-15,0.00,Security,High,None,Free SSL certificate,2024-08-15,DevOps Team
+SUB-017,API Gateway,Gateway Provider,Active,2024-09-01,2025-09-01,28.00,Infrastructure,Medium,None,API management,2024-09-01,Development Team
+SUB-018,Logging Service,Logging Provider,Active,2024-09-15,2025-09-15,25.00,Monitoring,Medium,None,Centralized logging,2024-09-15,DevOps Team
+SUB-019,Video Hosting,Video Provider,Active,2024-10-01,2025-10-01,0.00,Content,Medium,None,YouTube integration,2024-10-01,Marketing Team
+SUB-020,Chat Support,Support Provider,Pending,2024-10-15,2025-10-15,45.00,Communication,Low,Setup required,Customer support chat,2024-10-15,Support Team

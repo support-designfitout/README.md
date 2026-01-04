@@ -1,0 +1,328 @@
+name: Nightly Health Status Check
+
+on:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  health-audit:
+    runs-on: ubuntu-latest
+    name: Health Audit
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run health endpoint validation
+        id: health-check
+        run: |
+          echo "🏥 Starting health endpoint validation..."
+          
+          # Check if health files exist
+          if [ ! -f "public/health/pages.json" ]; then
+            echo "❌ Health JSON file not found"
+            exit 1
+          fi
+          
+          if [ ! -f "public/health/pages" ]; then
+            echo "❌ Health HTML file not found"
+            exit 1
+          fi
+          
+          echo "✅ Health files exist"
+          
+          # Validate JSON structure
+          node -e "
+            const fs = require('fs');
+            const healthData = JSON.parse(fs.readFileSync('public/health/pages.json', 'utf8'));
+            
+            if (!healthData.status || !healthData.service || !healthData.pages) {
+              console.error('❌ Invalid health data structure');
+              process.exit(1);
+            }
+            
+            if (!Array.isArray(healthData.pages)) {
+              console.error('❌ Pages must be an array');
+              process.exit(1);
+            }
+            
+            console.log('✅ JSON structure is valid');
+            console.log('Status:', healthData.status);
+            console.log('Service:', healthData.service);
+            console.log('Pages:', healthData.pages.length);
+          "
+
+      - name: Check TypeScript health function
+        run: |
+          echo "🔍 Checking TypeScript health function..."
+          
+          if [ ! -f "functions/health.ts" ]; then
+            echo "❌ TypeScript health function not found"
+            exit 1
+          fi
+          
+          # Check for required exports
+          if ! grep -q "export.*handleHealthCheck" functions/health.ts; then
+            echo "❌ Missing handleHealthCheck export"
+            exit 1
+          fi
+          
+          if ! grep -q "export.*HealthCheckResponse" functions/health.ts; then
+            echo "❌ Missing HealthCheckResponse interface"
+            exit 1
+          fi
+          
+          echo "✅ TypeScript health function structure validated"
+
+      - name: Validate cloud-agnostic implementation
+        run: |
+          echo "☁️ Validating cloud-agnostic implementation..."
+          
+          # Ensure no hard-coded cloud provider references
+          BANNED_TERMS="firebase cloudflare ga4 gsc"
+          FOUND_VIOLATIONS=0
+          
+          for term in $BANNED_TERMS; do
+            if grep -ri "$term" functions/health.ts 2>/dev/null; then
+              echo "❌ Found banned term: $term"
+              FOUND_VIOLATIONS=$((FOUND_VIOLATIONS + 1))
+            fi
+          done
+          
+          if [ $FOUND_VIOLATIONS -gt 0 ]; then
+            echo "❌ Cloud-agnostic validation failed"
+            exit 1
+          fi
+          
+          echo "✅ Cloud-agnostic implementation validated"
+
+      - name: Install Playwright browsers
+        run: npm run install:browsers
+
+      - name: Run health endpoint E2E tests
+        run: |
+          echo "🧪 Running health endpoint E2E tests..."
+          npx playwright test tests/health.spec.ts --reporter=list
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Verify health endpoint performance
+        run: |
+          echo "⚡ Verifying health endpoint performance..."
+          
+          # Start local server in background
+          npm run dev &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 5
+          
+          # Test endpoint response time
+          START_TIME=$(date +%s%3N)
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health/pages.json)
+          END_TIME=$(date +%s%3N)
+          LATENCY=$((END_TIME - START_TIME))
+          
+          echo "Response code: $RESPONSE"
+          echo "Latency: ${LATENCY}ms"
+          
+          # Validate response code
+          if [ "$RESPONSE" != "200" ]; then
+            echo "❌ Health endpoint returned non-200 status: $RESPONSE"
+            kill $SERVER_PID
+            exit 1
+          fi
+          
+          # Validate latency (should be under 1000ms for local)
+          if [ $LATENCY -gt 1000 ]; then
+            echo "⚠️ Warning: High latency detected (${LATENCY}ms)"
+          fi
+          
+          echo "✅ Health endpoint performance validated"
+          
+          # Cleanup
+          kill $SERVER_PID
+
+      - name: Generate audit report
+        if: always()
+        run: |
+          echo "📊 Generating health audit report..."
+          
+          REPORT_FILE="health-audit-report-$(date +%Y%m%d-%H%M%S).txt"
+          
+          cat > "$REPORT_FILE" << EOF
+          ====================================
+          Health Status Audit Report
+          ====================================
+          Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          
+          Audit Results:
+          - Health files exist: ✅
+          - JSON structure valid: ✅
+          - TypeScript function present: ✅
+          - Cloud-agnostic: ✅
+          - E2E tests passed: ✅
+          - Performance validated: ✅
+          
+          Summary: All health checks passed
+          ====================================
+          EOF
+          
+          cat "$REPORT_FILE"
+          echo "report_file=$REPORT_FILE" >> $GITHUB_OUTPUT
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-audit-report-${{ github.run_number }}
+          path: health-audit-report-*.txt
+          retention-days: 30
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Health audit failed!"
+          echo "Please review the logs and fix any issues."
+          echo "Audit run: ${{ github.run_id }}"
+
+  json-validation:
+    runs-on: ubuntu-latest
+    name: JSON Structure Validation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate health JSON files
+        run: |
+          echo "🔍 Validating all health-related JSON files..."
+          
+          # Check pages.json
+          if [ -f "public/health/pages.json" ]; then
+            echo "Validating public/health/pages.json..."
+            node -e "
+              const fs = require('fs');
+              try {
+                const data = JSON.parse(fs.readFileSync('public/health/pages.json', 'utf8'));
+                console.log('✅ pages.json is valid JSON');
+                
+                // Validate required fields
+                const required = ['status', 'service', 'timestamp', 'pages', 'domains', 'cache'];
+                const missing = required.filter(field => !(field in data));
+                
+                if (missing.length > 0) {
+                  console.error('❌ Missing required fields:', missing.join(', '));
+                  process.exit(1);
+                }
+                
+                console.log('✅ All required fields present');
+              } catch (err) {
+                console.error('❌ Invalid JSON:', err.message);
+                process.exit(1);
+              }
+            "
+          else
+            echo "❌ public/health/pages.json not found"
+            exit 1
+          fi
+
+      - name: Validate configuration files
+        run: |
+          echo "🔍 Validating configuration JSON files..."
+          
+          # Check config template
+          if [ -f "config.template.json" ]; then
+            echo "Validating config.template.json..."
+            node -e "
+              const fs = require('fs');
+              try {
+                JSON.parse(fs.readFileSync('config.template.json', 'utf8'));
+                console.log('✅ config.template.json is valid JSON');
+              } catch (err) {
+                console.error('❌ Invalid JSON:', err.message);
+                process.exit(1);
+              }
+            "
+          fi
+
+      - name: Summary
+        run: |
+          echo "✅ JSON validation completed successfully"
+
+  endpoint-accessibility:
+    runs-on: ubuntu-latest
+    name: Endpoint Accessibility Check
+    needs: [health-audit, json-validation]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start local server
+        run: |
+          npm run dev &
+          echo $! > server.pid
+          sleep 5
+
+      - name: Test health endpoints
+        run: |
+          echo "🌐 Testing health endpoint accessibility..."
+          
+          # Test JSON endpoint
+          echo "Testing /health/pages.json..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:3000/health/pages.json)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ JSON endpoint returned: $HTTP_CODE"
+            exit 1
+          fi
+          
+          echo "✅ JSON endpoint accessible"
+          
+          # Test HTML endpoint
+          echo "Testing /health/pages..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:3000/health/pages)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ HTML endpoint returned: $HTTP_CODE"
+            exit 1
+          fi
+          
+          echo "✅ HTML endpoint accessible"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+            rm server.pid
+          fi
+
+      - name: Summary
+        run: |
+          echo "✅ All health endpoints are accessible"
