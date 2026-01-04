@@ -1,0 +1,35 @@
+{
+  "name": "designfitout-functions",
+  "version": "1.0.0",
+  "description": "Cloud-agnostic serverless functions for Designfitout platform",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ../test-mrketoz-crm.js",
+    "dev": "node index.js",
+    "deploy-cloudflare": "wrangler publish mrketoz-crm-chat.js --name mrketoz-crm",
+    "deploy-gcp": "gcloud functions deploy chat --runtime nodejs18 --trigger-http --entry-point chat",
+    "deploy-aws": "aws lambda create-function --function-name mrketoz-crm-chat --runtime nodejs18.x --handler index.handler"
+  },
+  "keywords": [
+    "serverless",
+    "crm",
+    "chat",
+    "customer-service",
+    "cloud-agnostic"
+  ],
+  "author": "Designfitout",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/support-designfitout/Designfitout-Github.git"
+  },
+  "bugs": {
+    "url": "https://github.com/support-designfitout/Designfitout-Github/issues"
+  },
+  "homepage": "https://github.com/support-designfitout/Designfitout-Github#readme"
+}
