@@ -1,0 +1,31 @@
+{
+  "cloud": {
+    "provider": "CLOUD_PROVIDER",
+    "hosting": {
+      "service": "HOSTING_SERVICE",
+      "functions": "SERVERLESS_FUNCTIONS_SERVICE"
+    },
+    "database": {
+      "service": "DATABASE_SERVICE",
+      "storage": "FILE_STORAGE_SERVICE"
+    },
+    "cdn": {
+      "provider": "CDN_PROVIDER",
+      "proxy": true
+    }
+  },
+  "analytics": {
+    "provider": "ANALYTICS_SERVICE",
+    "debug_view": "ANALYTICS_DEBUG_SERVICE"
+  },
+  "search": {
+    "console": "SEARCH_CONSOLE_SERVICE"
+  },
+  "authentication": {
+    "cli_email": "AUTHENTICATED_EMAIL"
+  },
+  "domains": {
+    "primary": "fitoutlab.app",
+    "secondary": "designfitout.com"
+  }
+}

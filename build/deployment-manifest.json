@@ -1,0 +1,44 @@
+{
+  "deployment": {
+    "version": "2.1.0",
+    "buildDate": "2025-09-24T04:47:13Z",
+    "environment": "staging",
+    "features": {
+      "modularArchitecture": true,
+      "deepLearningNarrative": true,
+      "enhancedVisualEffects": true,
+      "strategicAnalysis": true,
+      "adaptiveUI": true
+    }
+  },
+  "modules": {
+    "core": ["module-loader"],
+    "ai": ["deep-learning-narrative"],
+    "ui": ["visual-effects"],
+    "analytics": ["strategic-analysis"]
+  },
+  "assets": {
+    "html": ["public/index.html", "public/ind2x.html"],
+    "css": ["public/styles.css"],
+    "javascript": [
+      "modules/module-bootstrap.js",
+      "modules/core/module-loader.js",
+      "modules/ai/deep-learning-narrative.js",
+      "modules/ui/visual-effects.js",
+      "public/strategic-analysis.js"
+    ],
+    "configuration": [
+      "modules/module-config.json",
+      "config.template.json",
+      "firebase.json"
+    ]
+  },
+  "deployment_commands": [
+    "Upload build/ directory to cloud hosting",
+    "Configure serverless functions from build/functions/",
+    "Update CDN cache",
+    "Verify module loading",
+    "Test AI narrative system",
+    "Validate performance metrics"
+  ]
+}

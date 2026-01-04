@@ -1,0 +1,80 @@
+{
+  "modules": {
+    "core": {
+      "moduleLoader": {
+        "path": "modules/core/module-loader.js",
+        "priority": 1,
+        "autoLoad": true,
+        "dependencies": []
+      }
+    },
+    "ai": {
+      "deepLearningNarrative": {
+        "path": "modules/ai/deep-learning-narrative.js",
+        "priority": 3,
+        "autoLoad": true,
+        "dependencies": ["moduleLoader"],
+        "config": {
+          "learningRate": 0.01,
+          "maxInteractions": 1000,
+          "sentimentUpdateInterval": 30000,
+          "adaptiveThreshold": 0.3
+        }
+      }
+    },
+    "analytics": {
+      "strategicAnalysis": {
+        "path": "public/strategic-analysis.js",
+        "priority": 4,
+        "autoLoad": true,
+        "dependencies": ["moduleLoader"],
+        "config": {
+          "analysisInterval": 30000,
+          "competitorUpdateFrequency": 60000,
+          "metricsRefreshRate": 1000
+        }
+      }
+    },
+    "ui": {
+      "visualEffects": {
+        "path": "modules/ui/visual-effects.js",
+        "priority": 2,
+        "autoLoad": true,
+        "dependencies": ["moduleLoader"],
+        "config": {
+          "animationDuration": 600,
+          "glassmorphismIntensity": 20,
+          "parallaxStrength": 0.5
+        }
+      }
+    }
+  },
+  "globalConfig": {
+    "debugging": {
+      "enabled": true,
+      "logLevel": "info",
+      "showModuleStats": true
+    },
+    "performance": {
+      "preloadModules": true,
+      "lazyLoadThreshold": 2000,
+      "cacheModules": true
+    },
+    "features": {
+      "deepLearning": true,
+      "adaptiveNarrative": true,
+      "sentimentAnalysis": true,
+      "contextualLearning": true
+    }
+  },
+  "deployment": {
+    "environment": "staging",
+    "version": "2.1.0",
+    "buildDate": "2025-09-24T04:47:13Z",
+    "features": {
+      "modules": true,
+      "ai_narrative": true,
+      "enhanced_analytics": true
+    }
+  }
+}
