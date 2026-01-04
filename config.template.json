@@ -1,0 +1,84 @@
+{
+  "cloud": {
+    "provider": "CLOUD_PROVIDER",
+    "hosting": {
+      "service": "HOSTING_SERVICE",
+      "functions": "SERVERLESS_FUNCTIONS_SERVICE"
+    },
+    "database": {
+      "service": "DATABASE_SERVICE",
+      "storage": "FILE_STORAGE_SERVICE"
+    },
+    "cdn": {
+      "provider": "CDN_PROVIDER",
+      "proxy": true
+    }
+  },
+  "analytics": {
+    "provider": "ANALYTICS_SERVICE",
+    "debug_view": "ANALYTICS_DEBUG_SERVICE"
+  },
+  "search": {
+    "console": "SEARCH_CONSOLE_SERVICE"
+  },
+  "authentication": {
+    "cli_email": "AUTHENTICATED_EMAIL"
+  },
+  "domains": {
+    "primary": "fitoutlab.app",
+    "secondary": "designfitout.com",
+    "configuration": {
+      "primaryDomainFeatures": {
+        "toolFacing": true,
+        "capsuleLogic": true,
+        "architectureWorkflows": true
+      },
+      "secondaryDomainFeatures": {
+        "publicFacing": true,
+        "marketing": true,
+        "clientPortal": true
+      },
+      "sharedFeatures": {
+        "cloudBackend": true,
+        "userManagement": true,
+        "analytics": true
+      }
+    }
+  },
+  "environment": {
+    "variables": {
+      "NODE_ENV": "${NODE_ENV:development}",
+      "API_BASE_URL": "${API_BASE_URL}",
+      "CDN_BASE_URL": "${CDN_BASE_URL}",
+      "ANALYTICS_ID": "${ANALYTICS_ID}",
+      "SEARCH_CONSOLE_ID": "${SEARCH_CONSOLE_ID}",
+      "DATABASE_URL": "${DATABASE_URL}",
+      "STORAGE_BUCKET": "${STORAGE_BUCKET}"
+    },
+    "validation": {
+      "requireHttps": true,
+      "allowedOrigins": ["*.fitoutlab.app", "*.designfitout.com"],
+      "corsEnabled": true,
+      "cspEnabled": true
+    },
+    "optimization": {
+      "cacheStrategy": "adaptive",
+      "compressionEnabled": true,
+      "minification": true,
+      "lazyLoading": true
+    }
+  },
+  "deployment": {
+    "regions": ["global"],
+    "healthChecks": {
+      "enabled": true,
+      "endpoints": ["/health", "/api/status"],
+      "interval": "30s"
+    },
+    "monitoring": {
+      "errorTracking": true,
+      "performanceMetrics": true,
+      "customEvents": ["user_interaction", "form_submission", "search_query"]
+    }
+  }
+}
