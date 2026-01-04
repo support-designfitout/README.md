@@ -1,0 +1,84 @@
+{
+  "cloud": {
+    "provider": "LOCAL_DEVELOPMENT",
+    "hosting": {
+      "service": "LOCAL_DEV_SERVER",
+      "functions": "LOCAL_FUNCTIONS"
+    },
+    "database": {
+      "service": "LOCAL_DATABASE",
+      "storage": "LOCAL_STORAGE"
+    },
+    "cdn": {
+      "provider": "DISABLED",
+      "proxy": false
+    }
+  },
+  "analytics": {
+    "provider": "DEVELOPMENT_ANALYTICS",
+    "debug_view": "ENABLED"
+  },
+  "search": {
+    "console": "DEVELOPMENT_SEARCH"
+  },
+  "authentication": {
+    "cli_email": "developer@localhost"
+  },
+  "domains": {
+    "primary": "localhost:3000",
+    "secondary": "localhost:3001",
+    "configuration": {
+      "primaryDomainFeatures": {
+        "toolFacing": true,
+        "capsuleLogic": true,
+        "architectureWorkflows": true
+      },
+      "secondaryDomainFeatures": {
+        "publicFacing": true,
+        "marketing": true,
+        "clientPortal": true
+      },
+      "sharedFeatures": {
+        "cloudBackend": false,
+        "userManagement": false,
+        "analytics": true
+      }
+    }
+  },
+  "environment": {
+    "variables": {
+      "NODE_ENV": "development",
+      "API_BASE_URL": "http://localhost:3000/api",
+      "CDN_BASE_URL": "http://localhost:3000/assets",
+      "ANALYTICS_ID": "DEV_ANALYTICS_ID",
+      "SEARCH_CONSOLE_ID": "DEV_SEARCH_ID",
+      "DATABASE_URL": "sqlite://localhost/dev.db",
+      "STORAGE_BUCKET": "local-storage"
+    },
+    "validation": {
+      "requireHttps": false,
+      "allowedOrigins": ["http://localhost:3000", "http://localhost:3001"],
+      "corsEnabled": true,
+      "cspEnabled": false
+    },
+    "optimization": {
+      "cacheStrategy": "none",
+      "compressionEnabled": false,
+      "minification": false,
+      "lazyLoading": false
+    }
+  },
+  "deployment": {
+    "regions": ["local"],
+    "healthChecks": {
+      "enabled": false,
+      "endpoints": ["/health"],
+      "interval": "60s"
+    },
+    "monitoring": {
+      "errorTracking": false,
+      "performanceMetrics": false,
+      "customEvents": ["development_event"]
+    }
+  }
+}
