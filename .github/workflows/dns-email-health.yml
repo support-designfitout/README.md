@@ -1,0 +1,86 @@
+name: DNS Email Health
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, staging]
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  dns-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [designfitout.com, fitoutlab.app]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure dig present
+        run: sudo apt-get update -y && sudo apt-get install -y dnsutils
+
+      - name: DNS Email Health
+        id: runcheck
+        run: |
+          chmod +x tools/dnscheck.sh
+          ./tools/dnscheck.sh "${{ matrix.domain }}" | tee "dnscheck-${{ matrix.domain }}.log"
+          echo "rc=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Append summary
+        if: always()
+        run: |
+          {
+            echo "### DNS Email Health – ${{ matrix.domain }}"
+            echo
+            echo '```text'
+            tail -n 200 "dnscheck-${{ matrix.domain }}.log" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dnscheck-logs-${{ github.run_id }}
+          path: dnscheck-*.log
+          if-no-files-found: ignore
+
+      # ---------- FAILURE-ONLY ALERTS ----------
+      # Slack (optional): set a repo secret SLACK_WEBHOOK_URL to enable
+      - name: Notify Slack on failure
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          payload=$(jq -n --arg repo "${{ github.repository }}" \
+                         --arg run "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                         --arg dom "${{ matrix.domain }}" \
+                         '{text: ("❌ DNS Email Health failed for \($dom)\nRepo: \($repo)\nRun: \($run)")}')
+          curl -sS -X POST -H 'Content-type: application/json' \
+               --data "$payload" "$SLACK_WEBHOOK_URL"
+
+      # Email (optional): requires SMTP secrets (see notes below)
+      - name: Email on failure
+        if: failure() && secrets.SMTP_HOST != '' && secrets.SMTP_USERNAME != '' && secrets.SMTP_PASSWORD != '' && secrets.ALERT_EMAIL_TO != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT || 587 }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ DNS Email Health failed: ${{ matrix.domain }}"
+          to: ${{ secrets.ALERT_EMAIL_TO }}
+          from: DNS Health <${{ secrets.ALERT_EMAIL_FROM || secrets.SMTP_USERNAME }}>
+          content_type: text/plain
+          body: |
+            Workflow: ${{ github.workflow }}
+            Repo:     ${{ github.repository }}
+            Domain:   ${{ matrix.domain }}
+            Run:      https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Tail of log:
+            ----------------------------------------
+            ${{ steps.runcheck.outcome != 'success' && join(fromJSON('[""]'),'') || '' }}
