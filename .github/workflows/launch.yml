@@ -1,0 +1,50 @@
+# .github/workflows/launch.yml
+
+name: Deploy to Firebase and Purge Cache
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # This assumes a standard Node.js project.
+      # You may need to adjust the Node version or build steps.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm' # Or 'yarn', 'pnpm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: live
+          projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
+
+      - name: Purge Cloudflare Cache
+        uses: jakejarvis/cloudflare-purge-action@v0.3.0
+        env:
+          CLOUDFLARE_ZONE: ${{ secrets.CF_ZONE_ID }}
+          CLOUDFLARE_TOKEN: ${{ secrets.CF_API_TOKEN }}
+
+      - name: Ping Looker Webhook
+        if: secrets.LOOKER_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          --data '{"text":"✅ Deployment to ${{ secrets.CF_DOMAIN }} complete."}' \
+          ${{ secrets.LOOKER_WEBHOOK_URL }}
