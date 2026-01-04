@@ -1,0 +1,330 @@
+{
+  "vibe-coding": {
+    "version": "1.0.0",
+    "description": "AI-assisted development configuration for FitOutLab project",
+    "framework": {
+      "name": "Vibe Coding Principles",
+      "focus": "AI-enhanced workflows for design and fitout solutions",
+      "tools": ["GitHub Copilot", "AI Code Review", "Smart Templates", "Automated Testing"]
+    },
+    "modules": {
+      "mrketoz-crm": {
+        "ai-features": [
+          "Customer sentiment analysis",
+          "Automated response generation",
+          "Smart lead scoring",
+          "Predictive customer needs",
+          "Intelligent conversation routing"
+        ],
+        "apis": [
+          "/chat/ai-insights",
+          "/chat/sentiment-analysis",
+          "/chat/lead-scoring"
+        ],
+        "enhancement-priority": "high"
+      },
+      "drawing-tools": {
+        "ai-features": [
+          "Auto-CAD suggestions",
+          "Design pattern recognition",
+          "Space optimization algorithms",
+          "Material cost estimation",
+          "Building code compliance checks"
+        ],
+        "apis": [
+          "/drawing/ai-suggestions",
+          "/drawing/space-optimizer",
+          "/drawing/compliance-check"
+        ],
+        "enhancement-priority": "high"
+      },
+      "interior-outdoor-design": {
+        "ai-features": [
+          "Mood board generation",
+          "Color palette suggestions",
+          "Style matching algorithms",
+          "Material compatibility checker",
+          "Lighting optimization",
+          "Climate-appropriate recommendations"
+        ],
+        "apis": [
+          "/design/mood-board-generator",
+          "/design/color-palette",
+          "/design/style-matcher",
+          "/design/material-checker"
+        ],
+        "enhancement-priority": "high"
+      },
+      "blogging-features": {
+        "ai-features": [
+          "Content writing assistant",
+          "SEO optimization",
+          "Image caption generation",
+          "Trend analysis",
+          "Audience engagement insights"
+        ],
+        "apis": [
+          "/blog/ai-writer",
+          "/blog/seo-optimizer",
+          "/blog/trend-analyzer"
+        ],
+        "enhancement-priority": "medium"
+      },
+      "designpedia": {
+        "ai-features": [
+          "Smart search and recommendations",
+          "Knowledge graph connections",
+          "Auto-categorization",
+          "Content summarization",
+          "Visual similarity matching"
+        ],
+        "apis": [
+          "/designpedia/smart-search",
+          "/designpedia/recommendations",
+          "/designpedia/summarizer"
+        ],
+        "enhancement-priority": "high"
+      },
+      "samples": {
+        "ai-features": [
+          "Sample matching algorithms",
+          "Procurement automation",
+          "Quality prediction",
+          "Cost optimization",
+          "Supplier recommendations"
+        ],
+        "apis": [
+          "/samples/matcher",
+          "/samples/procurement",
+          "/samples/quality-predictor"
+        ],
+        "enhancement-priority": "medium"
+      },
+      "mood-boards": {
+        "ai-features": [
+          "Automated layout generation",
+          "Style consistency checking",
+          "Color harmony analysis",
+          "Trend integration",
+          "Client preference learning"
+        ],
+        "apis": [
+          "/moodboards/auto-layout",
+          "/moodboards/style-checker",
+          "/moodboards/color-harmony"
+        ],
+        "enhancement-priority": "high"
+      },
+      "quotation-generation": {
+        "ai-features": [
+          "Pricing analysis and optimization",
+          "Proposal automation",
+          "Risk assessment",
+          "Timeline prediction",
+          "Competitive analysis"
+        ],
+        "apis": [
+          "/quotation/pricing-analyzer",
+          "/quotation/proposal-generator",
+          "/quotation/risk-assessor"
+        ],
+        "enhancement-priority": "high"
+      },
+      "automation": {
+        "ai-features": [
+          "Smart task scheduling",
+          "Workflow optimization",
+          "Resource allocation",
+          "Deadline prediction",
+          "Exception handling"
+        ],
+        "apis": [
+          "/automation/task-scheduler",
+          "/automation/workflow-optimizer",
+          "/automation/resource-allocator"
+        ],
+        "enhancement-priority": "high"
+      },
+      "tenders": {
+        "ai-features": [
+          "Tender matching",
+          "Proposal scoring",
+          "Competition analysis",
+          "Success probability prediction",
+          "Document automation"
+        ],
+        "apis": [
+          "/tenders/matcher",
+          "/tenders/scorer",
+          "/tenders/analyzer"
+        ],
+        "enhancement-priority": "medium"
+      },
+      "price-lists": {
+        "ai-features": [
+          "Dynamic pricing algorithms",
+          "Market analysis",
+          "Profit optimization",
+          "Seasonal adjustments",
+          "Competitor monitoring"
+        ],
+        "apis": [
+          "/pricing/dynamic-calculator",
+          "/pricing/market-analyzer",
+          "/pricing/profit-optimizer"
+        ],
+        "enhancement-priority": "medium"
+      },
+      "vendor-management": {
+        "ai-features": [
+          "Vendor scoring algorithms",
+          "Performance prediction",
+          "Risk assessment",
+          "Recommendation engine",
+          "Contract optimization"
+        ],
+        "apis": [
+          "/vendors/scorer",
+          "/vendors/predictor",
+          "/vendors/recommender"
+        ],
+        "enhancement-priority": "medium"
+      },
+      "audience-insights": {
+        "ai-features": [
+          "Behavioral analysis",
+          "Segmentation algorithms",
+          "Preference prediction",
+          "Engagement optimization",
+          "Personalization engine"
+        ],
+        "apis": [
+          "/insights/behavioral-analyzer",
+          "/insights/segmentation",
+          "/insights/personalizer"
+        ],
+        "enhancement-priority": "high"
+      },
+      "kpis": {
+        "ai-features": [
+          "Performance forecasting",
+          "Anomaly detection",
+          "Trend analysis",
+          "Recommendation generation",
+          "Automated reporting"
+        ],
+        "apis": [
+          "/kpis/forecaster",
+          "/kpis/anomaly-detector",
+          "/kpis/trend-analyzer"
+        ],
+        "enhancement-priority": "high"
+      },
+      "usps": {
+        "ai-features": [
+          "Competitive advantage identification",
+          "Market positioning analysis",
+          "Value proposition optimization",
+          "Messaging personalization",
+          "Performance tracking"
+        ],
+        "apis": [
+          "/usps/advantage-identifier",
+          "/usps/positioning-analyzer",
+          "/usps/message-optimizer"
+        ],
+        "enhancement-priority": "medium"
+      }
+    },
+    "development-standards": {
+      "ai-assistance": {
+        "code-generation": {
+          "templates": true,
+          "auto-completion": true,
+          "smart-suggestions": true,
+          "pattern-recognition": true
+        },
+        "code-review": {
+          "automated-analysis": true,
+          "security-scanning": true,
+          "performance-optimization": true,
+          "best-practices-enforcement": true
+        },
+        "testing": {
+          "ai-generated-tests": true,
+          "test-case-suggestions": true,
+          "coverage-optimization": true,
+          "regression-testing": true
+        },
+        "documentation": {
+          "auto-generation": true,
+          "smart-comments": true,
+          "api-documentation": true,
+          "user-guides": true
+        }
+      },
+      "cloud-agnostic": {
+        "required": true,
+        "banned-terms": ["firebase", "cloudflare", "ga4", "gsc"],
+        "configuration-driven": true,
+        "vendor-neutral": true
+      },
+      "performance": {
+        "core-web-vitals": true,
+        "lighthouse-score": ">= 90",
+        "load-time": "< 3s",
+        "ai-optimization": true
+      },
+      "security": {
+        "csp-headers": true,
+        "input-validation": true,
+        "ai-security-analysis": true,
+        "vulnerability-scanning": true
+      }
+    },
+    "ai-workflow-templates": {
+      "feature-development": [
+        "Analyze requirements with AI",
+        "Generate initial code structure",
+        "Implement core functionality",
+        "Add AI enhancements",
+        "Generate tests automatically",
+        "Optimize with AI suggestions",
+        "Document with AI assistance"
+      ],
+      "bug-fixing": [
+        "AI-powered issue analysis",
+        "Root cause identification",
+        "Solution generation",
+        "Implementation with AI assistance",
+        "Automated regression testing",
+        "Performance impact analysis"
+      ],
+      "optimization": [
+        "Performance bottleneck detection",
+        "AI-suggested improvements",
+        "Code refactoring assistance",
+        "Automated testing",
+        "Performance monitoring"
+      ]
+    },
+    "integration": {
+      "github-copilot": {
+        "enabled": true,
+        "features": [
+          "Code completion",
+          "Function generation",
+          "Test creation",
+          "Documentation writing",
+          "Bug fixing assistance"
+        ]
+      },
+      "custom-ai-apis": {
+        "enabled": true,
+        "base-url": "${AI_API_BASE_URL}",
+        "authentication": "Bearer token",
+        "rate-limiting": true
+      }
+    }
+  }
+}
