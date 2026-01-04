@@ -1,0 +1,165 @@
+name: Smoke E2E Tests
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      cache_enforcement:
+        description: 'Require cache hit'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  smoke-e2e-tests:
+    name: Smoke E2E Tests (Production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run brand neutrality tests first
+        run: |
+          echo "🧪 Running brand neutrality validation..."
+          node test-brand-neutrality.js
+
+      - name: Run CRM tests
+        run: |
+          echo "🧪 Running CRM functionality tests..."
+          node test-mrketoz-crm.js
+
+      - name: Run smoke E2E tests against production
+        env:
+          BASE_URL: https://app.fitoutlab.app
+          REQUIRE_CACHE_HIT: "true"
+          CI: true
+        run: |
+          echo "🚀 Running smoke E2E tests against production..."
+          echo "Base URL: $BASE_URL"
+          echo "Cache enforcement: $REQUIRE_CACHE_HIT"
+          npx playwright test tests/health.spec.ts tests/perf.spec.ts tests/redirects.spec.ts --reporter=html,github
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-e2e-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Comment PR with results
+        uses: actions/github-script@v7
+        if: always() && github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Read test results if available
+            let summary = '## 🧪 Smoke E2E Test Results\n\n';
+            summary += `**Environment:** Production (https://app.fitoutlab.app)\n`;
+            summary += `**Cache Enforcement:** Enabled (REQUIRE_CACHE_HIT=true)\n\n`;
+            
+            // Check for test results
+            try {
+              const resultsPath = 'test-results/results.json';
+              if (fs.existsSync(resultsPath)) {
+                const results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+                const { stats } = results;
+                
+                summary += `### Test Statistics\n`;
+                summary += `- ✅ Passed: ${stats.passed || 0}\n`;
+                summary += `- ❌ Failed: ${stats.failed || 0}\n`;
+                summary += `- ⏭️ Skipped: ${stats.skipped || 0}\n`;
+                summary += `- ⏱️ Duration: ${stats.duration || 0}ms\n\n`;
+                
+                if (stats.failed > 0) {
+                  summary += `### ❌ Failed Tests\n`;
+                  summary += `Some tests failed. Check the detailed report in the artifacts.\n\n`;
+                }
+                
+                summary += `### 📊 Cache Validation\n`;
+                summary += `Tests include strict cache policy enforcement:\n`;
+                summary += `- ✅ CDN cache status must be 'HIT'\n`;
+                summary += `- ✅ Cache age must be ≥1 second\n`;
+                summary += `- ❌ Build fails if cache is cold\n\n`;
+              }
+            } catch (error) {
+              summary += `Could not parse test results: ${error.message}\n\n`;
+            }
+            
+            summary += `### 🔗 Artifacts\n`;
+            summary += `- [Playwright Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
+            summary += `- [Test Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  validate-cache-warmup:
+    name: Validate Cache Warmup
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Check production cache status
+        run: |
+          echo "🔍 Checking production cache status..."
+          
+          # Check main page cache
+          RESPONSE=$(curl -s -I https://app.fitoutlab.app/)
+          CACHE_STATUS=$(echo "$RESPONSE" | grep -i "cf-cache-status" | cut -d: -f2 | tr -d ' \r')
+          AGE=$(echo "$RESPONSE" | grep -i "^age:" | cut -d: -f2 | tr -d ' \r')
+          
+          echo "Cache Status: $CACHE_STATUS"
+          echo "Age: ${AGE:-0} seconds"
+          
+          if [ "$CACHE_STATUS" != "HIT" ]; then
+            echo "⚠️  Warning: Production cache is not warm (Status: $CACHE_STATUS)"
+            echo "This may cause E2E tests to fail with REQUIRE_CACHE_HIT=true"
+          else
+            echo "✅ Production cache is warm"
+          fi
+          
+          # Check health endpoint if it exists
+          HEALTH_RESPONSE=$(curl -s -I https://app.fitoutlab.app/health/pages || true)
+          if [ $? -eq 0 ]; then
+            HEALTH_CACHE=$(echo "$HEALTH_RESPONSE" | grep -i "cf-cache-status" | cut -d: -f2 | tr -d ' \r')
+            echo "Health endpoint cache status: $HEALTH_CACHE"
+          fi
