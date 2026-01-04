@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesignFitout System & Ops Status</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="logo.svg" alt="DesignFitout Logo" class="logo">
+            <h1>DesignFitout System & Ops Status</h1>
+        </div>
+        <p>Real-time monitoring dashboard for premium design & fitout solutions</p>
+    </header>
+
+    <main>
+        <!-- Telemetry Bar -->
+        <div class="telemetry-bar">
+            <div class="telemetry-item glass">
+                <span class="telemetry-value" id="uptimeValue">--</span>
+                <span class="telemetry-label">Uptime</span>
+            </div>
+            <div class="telemetry-item glass">
+                <span class="telemetry-value" id="latencyValue">--</span>
+                <span class="telemetry-label">API Latency (ms)</span>
+            </div>
+            <div class="telemetry-item glass">
+                <span class="telemetry-value" id="lastAuditValue">--</span>
+                <span class="telemetry-label">Last Audit</span>
+            </div>
+        </div>
+
+        <!-- Status Grid -->
+        <div class="status-grid">
+            <div class="status-card glass">
+                <h2>
+                    <span class="status-indicator healthy" id="healthIndicator"></span>
+                    System Health
+                </h2>
+                <div class="status-content" id="healthContent">
+                    <p>Checking system status...</p>
+                </div>
+                <div class="status-timestamp" id="healthTimestamp"></div>
+            </div>
+
+            <div class="status-card glass">
+                <h2>
+                    <span class="status-indicator healthy" id="mrketozIndicator"></span>
+                    MrketOz Pipeline
+                </h2>
+                <div class="status-content" id="mrketozContent">
+                    <p>Loading pipeline data...</p>
+                </div>
+                <div class="status-timestamp" id="mrketozTimestamp"></div>
+            </div>
+        </div>
+
+        <!-- Milestone Tracker -->
+        <div class="milestone-tracker glass">
+            <h2>Bundle Milestone Tracker</h2>
+            <a href="../docs/subscription_cleanup_tracker.csv" class="milestone-link" target="_blank">
+                📊 View Subscription Cleanup Tracker
+            </a>
+            <div class="milestone-status" id="milestoneStatus">
+                <p>Loading milestone data...</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>For more information, visit our <a href="https://designfitout.com">website</a>.</p>
+            <p>Last refresh: <span id="lastRefresh">Never</span></p>
+        </footer>
+    </main>
+
+    <!-- Offline Badge -->
+    <div class="offline-badge" id="offlineBadge">
+        📡 Offline Mode - Using Cached Data
+    </div>
+
+    <script>
+        // Configuration
+        const REFRESH_INTERVAL = 60000; // 60 seconds
+        const HEALTH_ENDPOINT = '/health';
+        const MRKETOZ_ENDPOINT = '/api/mrketoz.json';
+        const CACHE_KEYS = {
+            health: 'df_status_health_cache',
+            mrketoz: 'df_status_mrketoz_cache',
+            uptime: 'df_status_uptime_start'
+        };
+
+        // Initialize uptime tracking
+        if (!localStorage.getItem(CACHE_KEYS.uptime)) {
+            localStorage.setItem(CACHE_KEYS.uptime, Date.now().toString());
+        }
+
+        // Utility functions
+        function formatTimestamp(isoString) {
+            if (!isoString) return 'N/A';
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        }
+
+        function formatRelativeTime(isoString) {
+            if (!isoString) return 'N/A';
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `${days}d ago`;
+            if (hours > 0) return `${hours}h ago`;
+            if (minutes > 0) return `${minutes}m ago`;
+            return 'Just now';
+        }
+
+        function calculateUptime() {
+            const startTime = parseInt(localStorage.getItem(CACHE_KEYS.uptime) || Date.now());
+            const uptime = Date.now() - startTime;
+            const hours = Math.floor(uptime / 3600000);
+            const minutes = Math.floor((uptime % 3600000) / 60000);
+            
+            // Calculate uptime percentage (assuming 99.9% base)
+            const uptimePercentage = 99.9;
+            return { hours, minutes, percentage: uptimePercentage };
+        }
+
+        function updateUptime() {
+            const uptime = calculateUptime();
+            const uptimeEl = document.getElementById('uptimeValue');
+            if (uptime.hours > 24) {
+                const days = Math.floor(uptime.hours / 24);
+                uptimeEl.textContent = `${days}d ${uptime.hours % 24}h`;
+            } else {
+                uptimeEl.textContent = `${uptime.hours}h ${uptime.minutes}m`;
+            }
+        }
+
+        // Fetch with graceful caching
+        async function fetchWithCache(url, cacheKey) {
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(url, {
+                    cache: 'no-cache',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                const latency = Date.now() - startTime;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Store in localStorage
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    data,
+                    timestamp: new Date().toISOString(),
+                    latency
+                }));
+                
+                // Hide offline badge
+                document.getElementById('offlineBadge').classList.remove('show');
+                
+                return { data, latency, cached: false };
+            } catch (error) {
+                console.warn(`Failed to fetch ${url}:`, error);
+                
+                // Try to load from cache
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const parsedCache = JSON.parse(cached);
+                    document.getElementById('offlineBadge').classList.add('show');
+                    return { 
+                        data: parsedCache.data, 
+                        latency: parsedCache.latency || 0, 
+                        cached: true,
+                        cacheTimestamp: parsedCache.timestamp
+                    };
+                }
+                
+                throw error;
+            }
+        }
+
+        // Update health status
+        async function updateHealthStatus() {
+            try {
+                const result = await fetchWithCache(HEALTH_ENDPOINT, CACHE_KEYS.health);
+                const { data, latency, cached, cacheTimestamp } = result;
+                
+                // Update indicator
+                const indicator = document.getElementById('healthIndicator');
+                indicator.className = 'status-indicator ' + (cached ? 'warning' : 'healthy');
+                
+                // Update content
+                const content = document.getElementById('healthContent');
+                content.innerHTML = `
+                    <p><strong>Status:</strong> ${data.status || 'Unknown'}</p>
+                    <p><strong>Service:</strong> ${data.service || 'N/A'}</p>
+                    ${data.endpoints ? `<p><strong>Endpoints:</strong> ${Object.keys(data.endpoints).length} active</p>` : ''}
+                    ${cached ? '<p style="color: var(--warning-color);">⚠️ Using cached data</p>' : ''}
+                `;
+                
+                // Update timestamp
+                const timestamp = document.getElementById('healthTimestamp');
+                const displayTime = cached ? cacheTimestamp : data.timestamp;
+                timestamp.textContent = `Updated: ${formatRelativeTime(displayTime)}`;
+                
+                // Update latency
+                document.getElementById('latencyValue').textContent = Math.round(latency);
+                
+            } catch (error) {
+                console.error('Failed to update health status:', error);
+                document.getElementById('healthIndicator').className = 'status-indicator offline';
+                document.getElementById('healthContent').innerHTML = '<p>❌ Unable to fetch health status</p>';
+                document.getElementById('offlineBadge').classList.add('show');
+            }
+        }
+
+        // Update MrketOz status
+        async function updateMrketozStatus() {
+            try {
+                const result = await fetchWithCache(MRKETOZ_ENDPOINT, CACHE_KEYS.mrketoz);
+                const { data, cached, cacheTimestamp } = result;
+                
+                // Update indicator
+                const indicator = document.getElementById('mrketozIndicator');
+                indicator.className = 'status-indicator ' + (cached ? 'warning' : 'healthy');
+                
+                // Update content
+                const content = document.getElementById('mrketozContent');
+                content.innerHTML = `
+                    <p><strong>Stage:</strong> ${data.stage || 'Unknown'}</p>
+                    <p><strong>Branch:</strong> ${data.branch || 'N/A'}</p>
+                    <p><strong>SHA:</strong> ${data.short_sha || 'N/A'}</p>
+                    <p><strong>Last PR:</strong> #${data.last_pr || 'N/A'}${data.last_pr_title ? ` - ${data.last_pr_title}` : ''}</p>
+                    ${data.flags ? `<p><strong>Flags:</strong> ${data.flags.join(', ')}</p>` : ''}
+                    ${cached ? '<p style="color: var(--warning-color);">⚠️ Using cached data</p>' : ''}
+                `;
+                
+                // Update timestamp
+                const timestamp = document.getElementById('mrketozTimestamp');
+                const displayTime = cached ? cacheTimestamp : data.updated_at;
+                timestamp.textContent = `Updated: ${formatRelativeTime(displayTime)}`;
+                
+                // Update last audit (use MrketOz timestamp as proxy)
+                document.getElementById('lastAuditValue').textContent = formatRelativeTime(data.updated_at);
+                
+            } catch (error) {
+                console.error('Failed to update MrketOz status:', error);
+                document.getElementById('mrketozIndicator').className = 'status-indicator offline';
+                document.getElementById('mrketozContent').innerHTML = '<p>❌ Unable to fetch pipeline status</p>';
+            }
+        }
+
+        // Load and parse milestone CSV
+        async function loadMilestoneData() {
+            try {
+                const response = await fetch('../docs/subscription_cleanup_tracker.csv');
+                const csvText = await response.text();
+                
+                // Parse CSV (simple parsing)
+                const lines = csvText.trim().split('\n');
+                const headers = lines[0].split(',');
+                const rows = lines.slice(1);
+                
+                let incomplete = 0;
+                let total = rows.length;
+                
+                rows.forEach(row => {
+                    if (row.toLowerCase().includes('incomplete')) {
+                        incomplete++;
+                    }
+                });
+                
+                const statusEl = document.getElementById('milestoneStatus');
+                statusEl.innerHTML = `
+                    <p><strong>Total Milestones:</strong> ${total}</p>
+                    <p><strong>Completed:</strong> ${total - incomplete}</p>
+                    <p><strong class="incomplete-count">Incomplete:</strong> <span class="incomplete-count">${incomplete}</span></p>
+                    <p><strong>Progress:</strong> ${Math.round(((total - incomplete) / total) * 100)}%</p>
+                `;
+                
+            } catch (error) {
+                console.error('Failed to load milestone data:', error);
+                document.getElementById('milestoneStatus').innerHTML = '<p>Unable to load milestone data</p>';
+            }
+        }
+
+        // Refresh all data
+        async function refreshAll() {
+            document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
+            updateUptime();
+            await Promise.all([
+                updateHealthStatus(),
+                updateMrketozStatus(),
+                loadMilestoneData()
+            ]);
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial load
+            refreshAll();
+            
+            // Auto-refresh loop every 60 seconds
+            setInterval(refreshAll, REFRESH_INTERVAL);
+            
+            console.log('DesignFitout Status Dashboard initialized');
+            console.log(`Auto-refresh interval: ${REFRESH_INTERVAL / 1000}s`);
+        });
+    </script>
+</body>
+</html>

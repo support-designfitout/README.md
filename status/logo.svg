@@ -1,0 +1,19 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="60" height="60" rx="12" fill="url(#gradient)"/>
+  <path d="M15 20 L30 15 L45 20 L45 35 L30 45 L15 35 Z" fill="white" opacity="0.9"/>
+  <path d="M30 15 L30 45" stroke="url(#lineGradient)" stroke-width="2"/>
+  <path d="M15 20 L45 35" stroke="url(#lineGradient)" stroke-width="2" opacity="0.6"/>
+  <path d="M45 20 L15 35" stroke="url(#lineGradient)" stroke-width="2" opacity="0.6"/>
+  <circle cx="30" cy="30" r="8" fill="url(#gradient)" opacity="0.8"/>
+  <text x="30" y="35" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">DF</text>
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1976d2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3949ab;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

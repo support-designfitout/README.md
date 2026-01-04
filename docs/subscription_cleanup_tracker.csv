@@ -1,0 +1,8 @@
+Milestone,Status,Priority,Due Date,Owner,Notes
+"Remove legacy subscription endpoints",Complete,High,2024-01-15,DevOps,"Completed during Q4 cleanup"
+"Migrate billing data to new schema",Complete,High,2024-01-20,Backend,"Migration successful"
+"Update client SDK documentation",Complete,Medium,2024-01-25,Docs,"Published v2.0 docs"
+"Archive old subscription logs",Incomplete,Medium,2024-02-01,DevOps,"Pending approval for S3 archival"
+"Deprecate v1 subscription API",Incomplete,High,2024-02-10,Backend,"Requires client notification"
+"Update subscription analytics dashboards",Incomplete,Low,2024-02-15,Analytics,"Waiting on new metrics definition"
+"Run final cleanup validation tests",Incomplete,Critical,2024-02-20,QA,"Blocked by API deprecation"
