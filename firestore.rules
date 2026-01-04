@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Tickets collection - allow authenticated users to read/write
+    match /tickets/{ticketId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Worker interactions - allow authenticated users to read/write
+    match /worker_interactions/{interactionId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Worker responses - allow authenticated users to read/write
+    match /worker_responses/{responseId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Worker analytics - allow authenticated users to read/write
+    match /worker_analytics/{analyticsId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Unassigned tickets - allow authenticated users to read/write
+    match /unassigned_tickets/{ticketId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

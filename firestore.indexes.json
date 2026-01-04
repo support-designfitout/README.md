@@ -1,0 +1,33 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "worker_analytics",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "worker",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "last_updated",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "worker_interactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "worker",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

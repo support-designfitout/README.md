@@ -1,0 +1,19 @@
+{
+  "extends": ["eslint:recommended", "google"],
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "env": {
+    "node": true,
+    "es6": true,
+    "jest": true
+  },
+  "rules": {
+    "no-console": "off",
+    "max-len": ["error", {"code": 120}],
+    "object-curly-spacing": ["error", "never"],
+    "require-jsdoc": "off",
+    "valid-jsdoc": "off"
+  }
+}

@@ -1,0 +1,163 @@
+# FitOutLab 200k Script Bundle — Capsule Logic
+
+![FitOut Lab Interior Logo](image1)
+
+**Domain:** `fitoutlab.app`  
+**Integration:** Nested under `designfitout.com` with shared Firebase backend  
+**Role:** Tool-facing capsule for architecture & interior design workflows
+
+---
+
+## 1. Visual Spec Builder
+
+**Purpose:**  
+Assemble specs visually, tag CEU content, export as PDF/JSON
+
+**Stack:**  
+- React + react-beautiful-dnd  
+- Firebase Firestore + Storage
+
+**Scripts:**  
+- `specBuilder.js` – PDF/JSON generator  
+- `drawingSync.js` – Firestore sync  
+- ACL token for designer/consultant roles
+
+---
+
+## 2. Client Dashboard
+
+**Purpose:**  
+Secure portal for capsule status, dispatch logs, spec downloads
+
+**Stack:**  
+- React + Firebase Auth  
+- Firestore: `clients/{clientId}`
+
+**Scripts:**  
+- `dashboardExport.js` – PDF generator  
+- ACL token for client/enterprise roles
+
+**Features:**  
+- Timeline view  
+- Spec download history  
+- Dispatch logs  
+- Engagement summary
+
+---
+
+## 3. Realtime Capsule Trace
+
+**Purpose:**  
+Live capsule progress visualization
+
+**Stack:**  
+- React Timeline UI  
+- Firebase Realtime DB or Firestore listeners
+
+**Scripts:**  
+- `capsuleTrace.js` – PDF/dashboard export  
+- Events: `designStarted`, `specApproved`, `dispatchTriggered`, `exportCompleted`
+
+---
+
+## 4. Multi-language Support
+
+**Purpose:**  
+Arabic + English toggle across public pages
+
+**Stack:**  
+- React Intl or Firebase i18n  
+- JSON files: `en.json`, `ar.json`
+
+**Scripts:**  
+- SEO schema per language  
+- Translated `sitemap.xml`  
+- RTL layout for Arabic
+
+---
+
+## 5. Design-to-Dispatch Sync
+
+**Purpose:**  
+Link SpecLab selections to FIX24 dispatch logic
+
+**Stack:**  
+- SpecLab UI + Firestore trigger
+
+**Scripts:**  
+- `dispatchSync.js` – Creates dispatch ticket from spec  
+- `dispatchExport.js` – PDF export  
+- Capsule trace updated with sync event
+
+---
+
+## Drawing & Symbol Automation
+
+**AutoCAD:**  
+- `symbol_injector.lsp` – Loads standard symbols  
+- `boq_extractor.lsp` – Parses layers/blocks for quantities  
+- `2d3d_switch.lsp` – Converts 2D to 3D views
+
+**SketchUp:**  
+- `component_loader.rb` – Loads reusable components  
+- `boq_parser.rb` – Extracts dimensions/counts  
+- `renderQueue.rb` – Batch renders with V-Ray/Enscape
+
+**FitOutLab:**  
+- `capsule_draw.js` – Converts JSON specs to SVG/DXF
+
+---
+
+## Quotation & Price List Automation
+
+**Scripts:**  
+- `quoteGenerator.js` – Builds quotations from BOQ + price list  
+- `quoteExport.js` – PDF export  
+- `priceUpdater.js` – Syncs prices from CSV/daily input  
+- `priceManager.jsx` – Admin UI for edits  
+- `priceHistory.js` – Tracks changes over time
+
+---
+
+## Rendering & 2D/3D Automation
+
+**Scripts:**  
+- `renderTrigger.js` – Triggers rendering from specs  
+- Firebase Storage: `renders/{projectId}`
+
+---
+
+## Access Control & Roles
+
+**Roles:**  
+- Designer: Spec Builder, Rendering  
+- Estimator: BOQ + Quotation  
+- Admin: Price List Manager  
+- Client: Dashboard, Quotation Viewer  
+- Technician: Dispatch Logs, Capsule Trace
+
+**ACL tokens:** Issued via `issueToken.js`
+
+---
+
+## Deployment Bundle Contents
+
+**Packaged as:** `fitoutlab_200k_scripts.zip`
+
+**Includes:**  
+- AutoCAD: `symbol_injector.lsp`, `boq_extractor.lsp`, `2d3d_switch.lsp`  
+- SketchUp: `component_loader.rb`, `boq_parser.rb`, `renderQueue.rb`  
+- Firebase: `capsule_draw.js`, `dispatchSync.js`, `drawingSync.js`, `renderTrigger.js`, `quoteGenerator.js`, `quoteExport.js`, `priceUpdater.js`, `priceHistory.js`, `issueToken.js`, `capsuleTrace.js`  
+- React: `priceManager.jsx`, `dashboardExport.js`, `searchOverlay.js`  
+- i18n: `en.json`, `ar.json`  
+- SEO: `schema.json`, `sitemap.xml`, `robots.txt`
+
+---
+
+### Closure Note
+
+As of September 2025, FitOutLab has deployed a 200k script bundle covering drawing automation, BOQ extraction, quotation generation, price list maintenance, and rendering workflows. Scripts span AutoCAD, SketchUp, Firebase, and React, sealed under fitoutlab.app with ACL tokens, Firestore traceability, and export continuity.
+
+---
+
+_For deployment, extract bundle and follow README instructions in each module. For support, contact [support@fitoutlab.com]._
