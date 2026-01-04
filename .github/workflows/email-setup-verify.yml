@@ -1,0 +1,88 @@
+name: Email Setup Verification
+
+# This workflow runs the email setup verification script to check DNS records,
+# MTA-STS configuration, and email authentication setup for designfitout.com
+
+on:
+  # Allow manual triggering from Actions tab
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Enable verbose output'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  verify-email-setup:
+    name: Verify Email Configuration
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dnsutils curl openssl
+          
+          # Try to install swaks (may not be available in all repos)
+          sudo apt-get install -y swaks || echo "swaks not available, will skip SMTP tests"
+      
+      - name: Make verification script executable
+        run: chmod +x scripts/verify_email_setup.sh
+      
+      - name: Run email setup verification
+        id: verify
+        run: |
+          # Create output file for job summary
+          echo "## Email Setup Verification Results" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Domain**: designfitout.com" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run verification script and capture output
+          set +e  # Don't exit on error, we want to capture the output
+          ./scripts/verify_email_setup.sh | tee verification-output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+          
+          # Add output to job summary
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat verification-output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Exit with the script's exit code
+          exit $EXIT_CODE
+      
+      - name: Upload verification results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-results
+          path: verification-output.txt
+          retention-days: 30
+      
+      - name: Add status badge to summary
+        if: always()
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Status**: All checks passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status**: Some checks failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the output above for details and remediation steps." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Review [Google Workspace Setup Guide](../docs/GoogleWorkspaceSetup.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- Check [DNS Records Documentation](../infra/DNS/PROD-records.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- Run setup script: \`./scripts/cf_dns_setup.sh\`" >> $GITHUB_STEP_SUMMARY
