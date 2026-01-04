@@ -1,0 +1,165 @@
+name: MrketOz COO Report
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      # ── Cloudflare creds (set in Repo → Settings → Secrets and variables → Actions)
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      CF_API_TOKEN:  ${{ secrets.CF_API_TOKEN }}
+      # ── Your public app host (Pages)
+      API_HOST: https://app.fitoutlab.app
+      # Optional: cookie for owner-only endpoints during CI (Zero Trust / session)
+      AUTH_COOKIE: ${{ secrets.CF_ACCESS_COOKIE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node & Wrangler
+        uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - run: npm i -g wrangler@^4
+      - run: wrangler --version
+
+      # If your test scripts aren’t executable in git, make them so
+      - name: Prep test scripts
+        run: |
+          chmod +x ./test_ab.sh || true
+          chmod +x ./test_boq.sh || true
+
+      # ── Cloudflare Pages/D1 quick sanity (non-blocking)
+      - name: CF Projects (info-only)
+        continue-on-error: true
+        run: wrangler pages project list || true
+      - name: D1 Migrations (info-only)
+        continue-on-error: true
+        working-directory: workers/ai
+        run: wrangler d1 migrations list df_core || true
+
+      # ── Health & API checks ───────────────────────────────────────────
+      - name: Health check
+        id: health
+        run: |
+          set -e
+          echo "URL: ${API_HOST}"
+          echo '## HEAD /' >> report.md
+          curl -Is "${API_HOST}/" | head -n1 | tee -a report.md
+          echo -e "\n## /api/health" >> report.md
+          curl -s "${API_HOST}/api/health" | jq . | tee -a report.md
+
+      - name: A/B API checks
+        id: ab
+        run: |
+          set -e
+          export API_HOST AUTH_COOKIE
+          ./test_ab.sh | tee test_ab.log
+          echo -e "\n## A/B Suite\n\`\`\`txt" >> report.md
+          tail -n +1 test_ab.log >> report.md
+          echo -e "\n\`\`\`" >> report.md
+
+      - name: Materials / BOQ / Quotes checks
+        id: boq
+        run: |
+          set -e
+          export API_HOST AUTH_COOKIE
+          ./test_boq.sh | tee test_boq.log
+          echo -e "\n## BOQ & Quotes\n\`\`\`txt" >> report.md
+          tail -n +1 test_boq.log >> report.md
+          echo -e "\n\`\`\`" >> report.md
+
+      # ── Summarize into COO-style actionable bullets ──────────────────
+      - name: Summarize
+        id: sum
+        run: |
+          set -e
+          echo "# MrketOz COO Report — $(date -u +"%Y-%m-%d %H:%M UTC")" > header.md
+          echo "" >> header.md
+          echo "- Project: **FitoutLab**" >> header.md
+          echo "- Deployed host: **${API_HOST}**" >> header.md
+          echo "- CF Account: \\`${CF_ACCOUNT_ID:0:6}…\\`" >> header.md
+          echo "" >> header.md
+
+          # Simple signals
+          AB_OK=$(grep -q "All checks passed" test_ab.log && echo "✅" || echo "⚠️")
+          BOQ_OK=$(grep -q "All BOQ/Quote checks passed" test_boq.log && echo "✅" || echo "⚠️")
+
+          echo "## Status Snapshot" >> header.md
+          echo "- A/B suite: ${AB_OK}" >> header.md
+          echo "- Materials/BOQ/Quotes: ${BOQ_OK}" >> header.md
+          echo "" >> header.md
+
+          echo "## Next Actions (suggested)" >> header.md
+          if [ "$AB_OK" = "✅" ] && [ "$BOQ_OK" = "✅" ]; then
+            echo "- **Approve/Merge** current PR (if applicable)." >> header.md
+            echo "- Lock schema version after deploy (D1 migrations clean)." >> header.md
+          else
+            echo "- **Do not merge** yet; review failing section(s) below." >> header.md
+            echo "- Re-run migrations or fix JSON headers where flagged." >> header.md
+          fi
+          echo "" >> header.md
+
+          cat header.md report.md > full_report.md
+
+      - name: Upload logs (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mrketoz-logs
+          path: |
+            test_ab.log
+            test_boq.log
+            full_report.md
+
+      # ── Post as PR comment (or Issue on push) ────────────────────────
+      - name: Post COO Report (PR)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('full_report.md', 'utf8');
+            // Replace or add a fresh report comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const prev = comments.find(c => c.user.type === 'Bot' && c.body.includes('MrketOz COO Report'));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
+
+      - name: Post COO Report (Issue on push)
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('full_report.md', 'utf8');
+            const title = `MrketOz COO Report — ${new Date().toISOString().slice(0,16)}Z`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['mrketoz','coo-report','automation']
+            })

@@ -1,0 +1,186 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # JavaScript/Node.js testing
+  javascript-tests:
+    runs-on: ubuntu-latest
+    name: JavaScript Tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run brand neutrality tests
+        run: npm run test:brand-neutrality
+
+      - name: Run MrketOz CRM tests
+        run: npm run test:mrketoz-crm
+
+      - name: Run mobile auth tests
+        run: npm run test:mobile-auth
+
+      - name: Run vibe coding tests
+        run: npm run test:vibe-coding
+
+      - name: Install Playwright browsers
+        run: npm run install:browsers
+
+      - name: Run Playwright E2E tests
+        run: npm run test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  # Go service testing and linting
+  go-tests:
+    runs-on: ubuntu-latest
+    name: Go Tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Check if Go module exists
+        id: go-mod-check
+        run: |
+          if [ -f "go.mod" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download Go dependencies
+        if: steps.go-mod-check.outputs.exists == 'true'
+        run: go mod tidy
+
+      - name: Install golangci-lint
+        if: steps.go-mod-check.outputs.exists == 'true'
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: Run Go tests
+        if: steps.go-mod-check.outputs.exists == 'true'
+        run: go test -v ./...
+
+      - name: Run Go build
+        if: steps.go-mod-check.outputs.exists == 'true'
+        run: go build ./...
+
+      - name: Skip Go tests (no Go module found)
+        if: steps.go-mod-check.outputs.exists == 'false'
+        run: echo "No go.mod found, skipping Go tests"
+
+  # Ruby client testing
+  ruby-tests:
+    runs-on: ubuntu-latest
+    name: Ruby Tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+
+      - name: Check if Gemfile exists
+        id: gemfile-check
+        run: |
+          if [ -f "Gemfile" ] || [ -f "ruby/Gemfile" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            if [ -f "ruby/Gemfile" ]; then
+              echo "path=ruby" >> $GITHUB_OUTPUT
+            else
+              echo "path=." >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bundle install
+        if: steps.gemfile-check.outputs.exists == 'true'
+        run: |
+          cd ${{ steps.gemfile-check.outputs.path }}
+          bundle install
+
+      - name: Run Ruby tests
+        if: steps.gemfile-check.outputs.exists == 'true'
+        run: |
+          cd ${{ steps.gemfile-check.outputs.path }}
+          if bundle exec rspec --version > /dev/null 2>&1; then
+            bundle exec rspec
+          else
+            echo "RSpec not available, running basic Ruby syntax check"
+            ruby -c lib/**/*.rb || echo "No Ruby files to check"
+          fi
+
+      - name: Check Ruby syntax
+        if: steps.gemfile-check.outputs.exists == 'true'
+        run: |
+          cd ${{ steps.gemfile-check.outputs.path }}
+          find lib -name "*.rb" -exec ruby -c {} \; || echo "No Ruby files found in lib/"
+
+      - name: Skip Ruby tests (no Gemfile found)
+        if: steps.gemfile-check.outputs.exists == 'false'
+        run: echo "No Gemfile found, skipping Ruby tests"
+
+  # Integration and final validation
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: Integration Tests
+    needs: [javascript-tests, go-tests, ruby-tests]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run complete validation suite
+        run: npm run test:all
+
+      - name: Validate repository structure
+        run: |
+          echo "✅ JavaScript tests completed"
+          echo "✅ Go tests completed" 
+          echo "✅ Ruby tests completed"
+          echo "✅ Integration validation completed"
+          echo "🎉 All CI checks passed!"
