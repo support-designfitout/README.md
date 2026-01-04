@@ -1,0 +1,170 @@
+name: Email Setup Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Enable verbose output'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  verify-email-setup:
+    name: Verify Email Configuration
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          echo "Installing required packages..."
+          sudo apt-get update
+          sudo apt-get install -y dnsutils curl openssl
+          
+          # Try to install swaks (may fail in some environments)
+          sudo apt-get install -y swaks || echo "⚠️  swaks installation failed (optional)"
+      
+      - name: Display environment info
+        run: |
+          echo "=== Environment Information ==="
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner Arch: ${{ runner.arch }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Event: ${{ github.event_name }}"
+          echo ""
+          echo "=== Tool Versions ==="
+          dig -v 2>&1 | head -1 || echo "dig not available"
+          curl --version | head -1 || echo "curl not available"
+          openssl version || echo "openssl not available"
+          swaks --version 2>&1 | head -1 || echo "swaks not available (optional)"
+          echo ""
+      
+      - name: Make verification script executable
+        run: chmod +x scripts/verify_email_setup.sh
+      
+      - name: Run email setup verification
+        id: verify
+        continue-on-error: true
+        env:
+          VERBOSE: ${{ github.event.inputs.verbose }}
+        run: |
+          echo "=== Starting Email Setup Verification ==="
+          echo ""
+          
+          # Run verification script and capture output
+          if [[ "$VERBOSE" == "true" ]]; then
+            ./scripts/verify_email_setup.sh 2>&1 | tee verification_output.txt
+          else
+            ./scripts/verify_email_setup.sh 2>&1 | tee verification_output.txt
+          fi
+          
+          # Capture exit code
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "VERIFICATION_EXIT_CODE=${EXIT_CODE}" >> $GITHUB_OUTPUT
+          
+          exit $EXIT_CODE
+      
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "# Email Setup Verification Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add verification status
+          if [[ "${{ steps.verify.outputs.VERIFICATION_EXIT_CODE }}" == "0" ]]; then
+            echo "## ✅ Verification Status: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Verification Status: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add verification output
+          echo "## Verification Output" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat verification_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add quick reference
+          echo "## Quick Reference" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Documentation" >> $GITHUB_STEP_SUMMARY
+          echo "- [Google Workspace Setup Guide](docs/GoogleWorkspaceSetup.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [DNS Records Documentation](infra/DNS/PROD-records.md)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scripts" >> $GITHUB_STEP_SUMMARY
+          echo "- **DNS Setup:** \`./scripts/cf_dns_setup.sh\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Verification:** \`./scripts/verify_email_setup.sh\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Useful Commands" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "# Check MX records" >> $GITHUB_STEP_SUMMARY
+          echo "dig MX designfitout.com +short" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Check SPF record" >> $GITHUB_STEP_SUMMARY
+          echo "dig TXT designfitout.com +short | grep spf" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Check DMARC record" >> $GITHUB_STEP_SUMMARY
+          echo "dig TXT _dmarc.designfitout.com +short" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Check MTA-STS policy" >> $GITHUB_STEP_SUMMARY
+          echo "curl https://mta-sts.designfitout.com/.well-known/mta-sts.txt" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add external resources
+          echo "### External Tools" >> $GITHUB_STEP_SUMMARY
+          echo "- [MXToolbox](https://mxtoolbox.com/SuperTool.aspx?action=mx%3adesignfitout.com)" >> $GITHUB_STEP_SUMMARY
+          echo "- [DMARC Analyzer](https://www.dmarcanalyzer.com/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Mail Tester](https://www.mail-tester.com/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Google Admin Toolbox](https://toolbox.googleapps.com/)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload verification output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-verification-report-${{ github.run_number }}
+          path: verification_output.txt
+          retention-days: 30
+      
+      - name: Check verification result
+        if: steps.verify.outputs.VERIFICATION_EXIT_CODE != '0'
+        run: |
+          echo "❌ Email setup verification failed"
+          echo "Review the output above for details on what needs to be fixed"
+          echo ""
+          echo "Common issues:"
+          echo "  - DNS records not yet propagated (wait 5-30 minutes)"
+          echo "  - MX records not configured (run ./scripts/cf_dns_setup.sh)"
+          echo "  - DKIM not enabled in Google Workspace Admin"
+          echo "  - MTA-STS policy not deployed"
+          echo ""
+          echo "See docs/GoogleWorkspaceSetup.md for troubleshooting steps"
+          exit 1
+
+  notify-completion:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: verify-email-setup
+    if: always()
+    
+    steps:
+      - name: Summary
+        run: |
+          if [[ "${{ needs.verify-email-setup.result }}" == "success" ]]; then
+            echo "✅ Email setup verification completed successfully!"
+          else
+            echo "❌ Email setup verification failed. Check the job output for details."
+          fi

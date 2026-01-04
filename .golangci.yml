@@ -1,0 +1,270 @@
+# golangci-lint configuration for Designfitout-Github
+# This file configures the golangci-lint tool to ensure consistent Go code quality
+# and follows cloud-agnostic development principles
+
+run:
+  # Timeout for analysis, e.g. 30s, 5m.
+  timeout: 5m
+  
+  # Exit code when at least one issue was found.
+  issues-exit-code: 1
+  
+  # Include test files in the analysis.
+  tests: true
+  
+  # List of build tags, all linters use it.
+  build-tags: []
+  
+  # Which dirs to skip: issues from them won't be reported.
+  skip-dirs:
+    - vendor
+    - third_party
+    - testdata
+    - examples
+
+# Output configuration options
+output:
+  # Colored output; can be 'always', 'auto', or 'never'.
+  color: always
+  
+  # Print lines of code with issue.
+  print-issued-lines: true
+  
+  # Print linter name in the end of issue text.
+  print-linter-name: true
+  
+  # Make issues output unique by line.
+  uniq-by-line: true
+  
+  # Add a prefix to the output file references.
+  path-prefix: ""
+  
+  # Sort results by: filepath, line and column.
+  sort-results: true
+
+# Linters configuration
+linters-settings:
+  # Errcheck configuration
+  errcheck:
+    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
+    check-type-assertions: true
+    
+    # Report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`.
+    check-blank: false
+    
+    # List of functions to exclude from checking, where each entry is a single function to exclude.
+    exclude-functions:
+      - io/ioutil.ReadFile
+      - io.Copy(*bytes.Buffer)
+      - io.Copy(os.Stdout)
+
+  # Gocyclo configuration
+  gocyclo:
+    # Minimal code complexity to report.
+    min-complexity: 15
+
+  # Goconst configuration
+  goconst:
+    # Minimal length of string constant.
+    min-len: 3
+    
+    # Minimum occurrences of constant string count to trigger issue.
+    min-occurrences: 3
+    
+    # Ignore test files.
+    ignore-tests: false
+
+  # Gofmt configuration
+  gofmt:
+    # Simplify code: gofmt with `-s` option.
+    simplify: true
+
+  # Goimports configuration
+  goimports:
+    # Put imports beginning with prefix after 3rd-party packages.
+    local-prefixes: github.com/support-designfitout/Designfitout-Github
+
+  # Golint configuration
+  golint:
+    # Minimal confidence for issues.
+    min-confidence: 0
+
+  # Govet configuration
+  govet:
+    # Report about shadowed variables.
+    check-shadowing: true
+    
+    # Settings per analyzer.
+    settings:
+      printf:
+        # Comma-separated list of print function names to check.
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+
+  # Line length limit configuration
+  lll:
+    # Max line length, lines longer will be reported.
+    line-length: 120
+
+  # Unused configuration
+  unused:
+    # Treat code as a program (not a library) and report unused exported identifiers.
+    check-exported: false
+
+  # Whitespace configuration
+  whitespace:
+    multi-if: false   # Enforces newlines (or comments) after every multi-line if statement
+    multi-func: false # Enforces newlines (or comments) after every multi-line function signature
+
+  # Wsl configuration (whitespace linter)
+  wsl:
+    # Controls if you may cuddle assignments and anything without needing an empty line between them.
+    allow-assign-and-anything: false
+    
+    # Controls if you may cuddle assignments and calls without needing an empty line between them.
+    allow-assign-and-call: true
+    
+    # Controls if you may cuddle a multi-line assignment and cuddled assignment without needing an empty line between them.
+    allow-multiline-assign: true
+    
+    # Controls if you may end a case block with a whitespace.
+    allow-case-trailing-whitespace: true
+    
+    # Controls if you may cuddle declarations and anything without needing an empty line between them.
+    allow-cuddle-declarations: false
+    
+    # Controls if you may cuddle trailing comments.
+    allow-trailing-comment: false
+    
+    # Controls if blocks can end with comments.
+    allow-separated-leading-comment: false
+
+# Linters to enable/disable
+linters:
+  # Enable specific linters
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - exportloopref
+    - exhaustive
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - gomnd
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - rowserrcheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+
+  # Disable specific linters
+  disable:
+    - maligned  # deprecated
+    - scopelint # deprecated
+
+  # Run only specific linters (when specified, enable list is ignored)
+  # enable-all: false
+  # disable-all: false
+  
+  # Enable presets
+  presets:
+    - bugs
+    - unused
+    - format
+    - style
+    - complexity
+    - performance
+
+# Issues configuration
+issues:
+  # List of regexps of issue texts to exclude.
+  exclude: []
+  
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - lll
+    
+    # Exclude some staticcheck messages
+    - linters:
+        - staticcheck
+      text: "SA9003:"
+    
+    # Exclude lll issues for long lines with go:generate
+    - linters:
+        - lll
+      source: "^//go:generate "
+
+  # Independently from option `exclude` we use default exclude patterns.
+  exclude-use-default: false
+  
+  # If set to true exclude and exclude-rules regular expressions become case sensitive.
+  exclude-case-sensitive: false
+  
+  # The list of ids of default excludes to include or disable.
+  include: []
+  
+  # Maximum issues count per one linter.
+  max-issues-per-linter: 0
+  
+  # Maximum count of issues with the same text.
+  max-same-issues: 0
+  
+  # Show only new issues: if there are unstaged changes or untracked files, only those changes are analyzed.
+  new: false
+  
+  # Show only new issues created after git revision `REV`.
+  new-from-rev: ""
+  
+  # Show only new issues created in git patch with set file path.
+  new-from-patch: ""
+
+# Severity configuration
+severity:
+  # Set the default severity for issues.
+  default-severity: error
+  
+  # If set to true `severity-rules` regular expressions become case sensitive.
+  case-sensitive: false
+  
+  # Default value is empty list.
+  rules:
+    - linters:
+        - dupl
+      severity: info
+    - linters:
+        - gocritic
+      severity: info
