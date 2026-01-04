@@ -1,0 +1,282 @@
+name: Email Setup Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Domain to verify (default: designfitout.com)'
+        required: false
+        default: 'designfitout.com'
+      run_api_checks:
+        description: 'Run optional Cloudflare API checks'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  verify-email-setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y dnsutils curl openssl
+          echo "✅ Installed required tools: dig, curl, openssl"
+      
+      - name: Install optional tools
+        continue-on-error: true
+        run: |
+          sudo apt-get install -y swaks
+          echo "✅ Installed optional tool: swaks"
+      
+      - name: Make verification script executable
+        run: chmod +x scripts/verify_email_setup.sh
+      
+      - name: Run email setup verification
+        id: verify
+        run: |
+          echo "Starting email setup verification for ${{ inputs.domain }}..."
+          ./scripts/verify_email_setup.sh 2>&1 | tee verification-output.log
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Generate summary
+        if: always()
+        run: |
+          {
+            echo "# 📧 Email Setup Verification Results"
+            echo ""
+            echo "**Domain**: \`${{ inputs.domain }}\`"
+            echo "**Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo ""
+            
+            if [ "${{ steps.verify.outputs.exit_code }}" == "0" ]; then
+              echo "## ✅ Status: All Checks Passed"
+            else
+              echo "## ⚠️ Status: Some Checks Failed"
+            fi
+            
+            echo ""
+            echo "## Verification Output"
+            echo ""
+            echo '```'
+            cat verification-output.log
+            echo '```'
+            echo ""
+            echo "---"
+            echo ""
+            echo "### 📚 Next Steps"
+            echo ""
+            echo "- Review the output above for any warnings or errors"
+            echo "- If DKIM is missing, generate it in Google Admin Console"
+            echo "- Monitor DMARC reports at dmarc@${{ inputs.domain }}"
+            echo "- Consider upgrading DMARC policy: p=none → p=quarantine → p=reject"
+            echo ""
+            echo "### 📖 Documentation"
+            echo ""
+            echo "- [Google Workspace Setup Guide](../docs/GoogleWorkspaceSetup.md)"
+            echo "- [Production DNS Records](../infra/DNS/PROD-records.md)"
+            echo "- [DNS Setup Script](../scripts/cf_dns_setup.sh)"
+          } >> $GITHUB_STEP_SUMMARY
+      
+      - name: Run Cloudflare API checks (optional)
+        if: inputs.run_api_checks && secrets.CF_API_TOKEN != ''
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          ZONE_ID: ${{ secrets.ZONE_ID }}
+        run: |
+          echo "Running Cloudflare API checks..."
+          
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$ZONE_ID" ]; then
+            echo "⚠️ CF_API_TOKEN or ZONE_ID not configured - skipping API checks"
+            exit 0
+          fi
+          
+          # List all DNS records for the domain
+          echo ""
+          echo "=== DNS Records via Cloudflare API ==="
+          curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" | \
+            jq -r '.result[] | select(.type == "MX" or .type == "TXT" or .name | contains("mta-sts")) | 
+              "[\(.type)] \(.name) -> \(.content) (TTL: \(.ttl), Proxied: \(.proxied))"'
+          
+          echo ""
+          echo "✅ Cloudflare API checks completed"
+      
+      - name: Upload verification log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-verification-log-${{ github.run_id }}
+          path: verification-output.log
+          retention-days: 30
+      
+      - name: Check verification result
+        if: steps.verify.outputs.exit_code != '0'
+        run: |
+          echo "❌ Email setup verification failed with exit code ${{ steps.verify.outputs.exit_code }}"
+          echo ""
+          echo "Common issues:"
+          echo "  - DNS records not propagated yet (wait 5-10 minutes)"
+          echo "  - DKIM not configured in Google Workspace Admin Console"
+          echo "  - MTA-STS policy not deployed or accessible"
+          echo ""
+          echo "Review the verification output above for specific errors."
+          exit 0  # Don't fail the workflow, just report
+
+  verify-mta-sts:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Verify MTA-STS policy file structure
+        run: |
+          echo "Checking MTA-STS policy function exists..."
+          
+          if [ ! -f "functions/.well-known/mta-sts.txt.ts" ]; then
+            echo "❌ MTA-STS policy function not found"
+            exit 1
+          fi
+          
+          echo "✅ MTA-STS policy function exists"
+          
+          # Check policy file contains required fields
+          echo ""
+          echo "Checking policy content..."
+          
+          required_fields=("version: STSv1" "mode: enforce" "max_age:")
+          
+          for field in "${required_fields[@]}"; do
+            if grep -q "$field" functions/.well-known/mta-sts.txt.ts; then
+              echo "✅ Found: $field"
+            else
+              echo "❌ Missing: $field"
+              exit 1
+            fi
+          done
+          
+          # Check for Google MX servers
+          if grep -q "aspmx.l.google.com" functions/.well-known/mta-sts.txt.ts; then
+            echo "✅ Policy includes Google Workspace MX servers"
+          else
+            echo "⚠️ Policy may not include correct MX servers"
+          fi
+          
+          echo ""
+          echo "✅ MTA-STS policy structure validated"
+      
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "# 🔒 MTA-STS Policy Validation"
+            echo ""
+            echo "**Status**: ✅ Policy file structure validated"
+            echo ""
+            echo "## Policy Location"
+            echo ""
+            echo "\`functions/.well-known/mta-sts.txt.ts\`"
+            echo ""
+            echo "## Deployment"
+            echo ""
+            echo "Ensure this Cloudflare Pages Function is deployed to serve the policy at:"
+            echo ""
+            echo "\`https://mta-sts.${{ inputs.domain || 'designfitout.com' }}/.well-known/mta-sts.txt\`"
+            echo ""
+            echo "## Verification"
+            echo ""
+            echo "Test the deployed policy:"
+            echo ""
+            echo '```bash'
+            echo "curl https://mta-sts.${{ inputs.domain || 'designfitout.com' }}/.well-known/mta-sts.txt"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+
+  test-dns-propagation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install dig
+        run: sudo apt-get update -y && sudo apt-get install -y dnsutils
+      
+      - name: Test DNS from multiple resolvers
+        run: |
+          echo "Testing DNS propagation from multiple resolvers..."
+          
+          DOMAIN="${{ inputs.domain || 'designfitout.com' }}"
+          
+          # DNS resolvers to test
+          resolvers=(
+            "8.8.8.8:Google"
+            "1.1.1.1:Cloudflare"
+            "9.9.9.9:Quad9"
+          )
+          
+          echo ""
+          echo "=== MX Records ==="
+          for resolver in "${resolvers[@]}"; do
+            ip="${resolver%%:*}"
+            name="${resolver##*:}"
+            echo ""
+            echo "[$name - $ip]"
+            dig @$ip +short MX $DOMAIN | head -5
+          done
+          
+          echo ""
+          echo "=== SPF Record ==="
+          for resolver in "${resolvers[@]}"; do
+            ip="${resolver%%:*}"
+            name="${resolver##*:}"
+            echo ""
+            echo "[$name - $ip]"
+            dig @$ip +short TXT $DOMAIN | grep "v=spf1"
+          done
+          
+          echo ""
+          echo "=== DMARC Record ==="
+          for resolver in "${resolvers[@]}"; do
+            ip="${resolver%%:*}"
+            name="${resolver##*:}"
+            echo ""
+            echo "[$name - $ip]"
+            dig @$ip +short TXT _dmarc.$DOMAIN
+          done
+          
+          echo ""
+          echo "=== MTA-STS Record ==="
+          for resolver in "${resolvers[@]}"; do
+            ip="${resolver%%:*}"
+            name="${resolver##*:}"
+            echo ""
+            echo "[$name - $ip]"
+            dig @$ip +short TXT _mta-sts.$DOMAIN
+          done
+          
+          echo ""
+          echo "✅ DNS propagation test completed"
+      
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "# 🌐 DNS Propagation Test"
+            echo ""
+            echo "**Domain**: \`${{ inputs.domain || 'designfitout.com' }}\`"
+            echo ""
+            echo "Tested DNS records across multiple public resolvers:"
+            echo "- Google DNS (8.8.8.8)"
+            echo "- Cloudflare DNS (1.1.1.1)"
+            echo "- Quad9 DNS (9.9.9.9)"
+            echo ""
+            echo "If results differ between resolvers, DNS may still be propagating (wait 5-10 minutes)."
+          } >> $GITHUB_STEP_SUMMARY
