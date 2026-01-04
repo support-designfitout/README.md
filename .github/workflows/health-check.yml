@@ -1,0 +1,150 @@
+name: Health Check
+
+on:
+  # Run on schedule (every 15 minutes)
+  schedule:
+    - cron: '*/15 * * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Base URL to check'
+        required: false
+        default: 'https://app.fitoutlab.app'
+        type: string
+      latency_threshold:
+        description: 'Latency threshold in milliseconds'
+        required: false
+        default: '800'
+        type: string
+  
+  # Run on pull requests to validate endpoints before deployment
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'functions/api/**'
+      - 'functions/health.ts'
+      - '.github/workflows/health-check.yml'
+      - '.github/scripts/health_check.sh'
+
+jobs:
+  health-check:
+    name: API Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq bc curl
+      
+      - name: Run health check script
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://app.fitoutlab.app' }}
+          LATENCY_THRESHOLD: ${{ inputs.latency_threshold || '800' }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          LOG_FILE: health_check.log
+        run: |
+          echo "🏥 Starting health check..."
+          echo "Base URL: $BASE_URL"
+          echo "Latency threshold: ${LATENCY_THRESHOLD}ms"
+          echo ""
+          
+          bash .github/scripts/health_check.sh
+      
+      - name: Upload health check logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: health-check-logs-${{ github.run_number }}
+          path: health_check.log
+          retention-days: 7
+      
+      - name: Display log summary
+        if: always()
+        run: |
+          echo "📊 Health Check Log Summary:"
+          echo "================================"
+          if [ -f health_check.log ]; then
+            cat health_check.log
+          else
+            echo "No log file found"
+          fi
+      
+      - name: Comment on PR with results
+        uses: actions/github-script@v7
+        if: always() && github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let summary = '## 🏥 Health Check Results\n\n';
+            
+            try {
+              if (fs.existsSync('health_check.log')) {
+                const logContent = fs.readFileSync('health_check.log', 'utf8');
+                
+                // Extract summary information
+                const lines = logContent.split('\n');
+                const totalMatch = lines.find(l => l.includes('Total checks:'));
+                const passedMatch = lines.find(l => l.includes('Passed:'));
+                const failedMatch = lines.find(l => l.includes('Failed:'));
+                
+                if (totalMatch && passedMatch && failedMatch) {
+                  const total = totalMatch.match(/\d+/)?.[0] || '0';
+                  const passed = passedMatch.match(/\d+/)?.[0] || '0';
+                  const failed = failedMatch.match(/\d+/)?.[0] || '0';
+                  
+                  summary += `**Base URL:** ${{ inputs.base_url || 'https://app.fitoutlab.app' }}\n`;
+                  summary += `**Latency Threshold:** ${{ inputs.latency_threshold || '800' }}ms\n\n`;
+                  summary += `### Results\n`;
+                  summary += `- Total Checks: ${total}\n`;
+                  summary += `- ✅ Passed: ${passed}\n`;
+                  summary += `- ❌ Failed: ${failed}\n\n`;
+                  
+                  if (parseInt(failed) > 0) {
+                    summary += `### ⚠️ Issues Detected\n`;
+                    summary += `Some health checks failed. Review the detailed logs in the artifacts.\n\n`;
+                  } else {
+                    summary += `### ✅ All Checks Passed\n`;
+                    summary += `All API endpoints are healthy and responding within thresholds.\n\n`;
+                  }
+                }
+                
+                // Add endpoint details
+                summary += `### Checked Endpoints\n`;
+                summary += `- \`/health\` - Cloudflare Pages health endpoint\n`;
+                summary += `- \`/api/mrketoz.json\` - MrketOz pipeline status\n`;
+                summary += `- \`/api/registrar.json\` - Domain registrar information\n`;
+                summary += `- \`/api/planet.json\` - Planet touch configuration\n\n`;
+                
+                summary += `### 📄 Logs\n`;
+                summary += `Full logs are available in the workflow artifacts.\n`;
+              } else {
+                summary += '❌ Log file not found. Health check may have failed to run.\n';
+              }
+            } catch (error) {
+              summary += `❌ Error reading log file: ${error.message}\n`;
+            }
+            
+            summary += `\n### 🔗 Workflow Run\n`;
+            summary += `[View full workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+      
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "❌ Health check failed!"
+          echo "Check the logs above for details."
+          exit 1
