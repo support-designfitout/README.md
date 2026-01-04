@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBPR Emerald-Bar Report Cover</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a5f3c 0%, #2d8659 50%, #50c878 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .cover-container {
+            text-align: center;
+            padding: 40px;
+            max-width: 800px;
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 28px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .emerald-bar {
+            width: 80%;
+            height: 8px;
+            background: linear-gradient(90deg, #50c878, #7fdbac, #50c878);
+            margin: 40px auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .report-info {
+            font-size: 18px;
+            margin-top: 60px;
+            opacity: 0.85;
+        }
+        
+        .date {
+            font-size: 16px;
+            margin-top: 20px;
+            opacity: 0.7;
+        }
+        
+        .logo {
+            font-size: 64px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+    </style>
+</head>
+<body>
+    <div class="cover-container">
+        <div class="logo">◈</div>
+        <h1 class="title">CBPR Report</h1>
+        <div class="emerald-bar"></div>
+        <h2 class="subtitle">Quarterly Readiness Report</h2>
+        <div class="report-info">
+            <p>Comprehensive Business Process Review</p>
+            <p>Emerald-Bar Edition</p>
+        </div>
+        <div class="date">
+            <p>Generated: <span id="report-date">{{REPORT_DATE}}</span></p>
+            <p>Checksum: <span id="checksum">{{CHECKSUM}}</span></p>
+        </div>
+    </div>
+</body>
+</html>

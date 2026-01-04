@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FitOutLab Capsule v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f5f8fb;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 540px;
+      margin: 48px auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      padding: 40px 32px;
+    }
+    h1 {
+      color: #1a237e;
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+    ul {
+      margin: 24px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    ul li {
+      margin-bottom: 12px;
+      padding-left: 16px;
+      position: relative;
+    }
+    ul li:before {
+      content: "•";
+      color: #3949ab;
+      position: absolute;
+      left: 0;
+    }
+    .domain, .cred, .deploy {
+      margin-bottom: 16px;
+    }
+    .domain strong, .cred strong, .deploy strong {
+      color: #1976d2;
+    }
+    .footer {
+      margin-top: 32px;
+      text-align: center;
+      color: #789;
+      font-size: 0.88rem;
+    }
+    
+    /* CTA Button Styles */
+    .cta-section {
+      margin: 32px 0;
+      text-align: center;
+      padding: 24px 0;
+      border-top: 1px solid rgba(26, 35, 126, 0.1);
+    }
+    
+    .cta-button {
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      min-width: 200px;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(26, 35, 126, 0.4);
+      background: linear-gradient(135deg, #1976d2 0%, #3949ab 100%);
+    }
+    
+    .cta-button:active {
+      transform: translateY(0);
+    }
+    
+    .cta-button:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: 2px;
+    }
+    
+    .cta-button.loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    
+    .cta-button .icon {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .cta-button:hover .icon {
+      transform: scale(1.1);
+    }
+    
+    .cta-button .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+    
+    .cta-button.loading .spinner {
+      display: block;
+    }
+    
+    .cta-button.loading .icon {
+      display: none;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .status-message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .status-message.success {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #4caf50;
+    }
+    
+    .status-message.error {
+      background: #ffeaea;
+      color: #c62828;
+      border: 1px solid #f44336;
+    }
+    
+    .status-message.info {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #2196f3;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 480px) {
+      .cta-button {
+        width: 100%;
+        padding: 14px 24px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FitOutLab Capsule</h1>
+    <div class="domain">
+      <strong>🌐 Domain:</strong>
+      <ul>
+        <li>Primary: <code>fitoutlab.app</code></li>
+        <li>CNAME: <code>www.fitoutlab.app → fitoutlab.app</code> (CDN proxy enabled)</li>
+      </ul>
+    </div>
+    <div class="modules">
+      <strong>🧱 Modules:</strong>
+      <ul>
+        <li>FIX24: Diagnostic flows, BOQ normalization</li>
+        <li>SpecLab: Spec-driven schema overlays</li>
+        <li>SeveNue: Dispatch publishing, quotation logic</li>
+      </ul>
+    </div>
+    <div class="cred">
+      <strong>🔐 Credential Hygiene:</strong>
+      <ul>
+        <li>Secrets vault linked via symbolic path</li>
+        <li>Audit logs injected for every fix and export</li>
+        <li>Cloud CLI authenticated as <code>this4arun@gmail.com</code></li>
+      </ul>
+    </div>
+    <div class="deploy">
+      <strong>🚀 Deployment:</strong>
+      <ul>
+        <li>Cloud Hosting + Serverless Functions</li>
+        <li>Global clones: 🇸🇦 🇿🇦 🇵🇭 🇨🇴 🇹🇷 🇧🇷 🇪🇬 🇮🇳</li>
+        <li>Runtime export packaging per territory</li>
+      </ul>
+    </div>
+    <div class="smoke">
+      <strong>🧪 Smoke Tests:</strong>
+      <ul>
+        <li>DNS: <code>fitoutlab.app</code> + <code>designfitout.com</code></li>
+        <li>Search indexing + Analytics debug view validated</li>
+      </ul>
+    </div>
+    
+    <!-- CTA Section -->
+    <div class="cta-section">
+      <button 
+        id="ctaButton" 
+        class="cta-button"
+        aria-label="Start AI-powered design generation"
+        role="button"
+        tabindex="0"
+      >
+        <span class="icon">🚀</span>
+        <span class="spinner"></span>
+        <span>Start AI Generator</span>
+      </button>
+      <div id="statusMessage" class="status-message" role="status" aria-live="polite"></div>
+    </div>
+    
+    <div class="footer">&copy; 2025 FitOutLab Capsule - All rights reserved.
+    </div>
+  </div>
+  
+  <script src="ai-automation-engine.js"></script>
+  <script>
+    // Initialize AI Automation Engine
+    let aiEngine;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        aiEngine = new AIAutomationEngine();
+        console.log('AI Engine initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize AI Engine:', error);
+      }
+      
+      // CTA Button functionality
+      const ctaButton = document.getElementById('ctaButton');
+      const statusMessage = document.getElementById('statusMessage');
+      
+      if (ctaButton) {
+        ctaButton.addEventListener('click', triggerGenerator);
+        ctaButton.addEventListener('keydown', function(event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            triggerGenerator();
+          }
+        });
+      }
+    });
+    
+    /**
+     * Main generator trigger function
+     * Integrates with AI automation engine to process user requests
+     */
+    async function triggerGenerator() {
+      const button = document.getElementById('ctaButton');
+      const statusMessage = document.getElementById('statusMessage');
+      
+      try {
+        // Show loading state
+        showLoadingState(button, statusMessage);
+        
+        // Check if AI engine is available
+        if (!aiEngine) {
+          throw new Error('AI automation engine is not initialized');
+        }
+        
+        // Generate workflow configuration for design process
+        const workflowConfig = {
+          name: 'Design Generation Workflow',
+          description: 'AI-powered design and fitout generation process',
+          priority: 'high',
+          type: 'design_automation',
+          steps: [
+            { name: 'Requirements Analysis', estimated_duration: 5 },
+            { name: 'Design Concepts Generation', estimated_duration: 15 },
+            { name: 'Resource Allocation', estimated_duration: 10 },
+            { name: 'Timeline Prediction', estimated_duration: 5 },
+            { name: 'Quotation Generation', estimated_duration: 10 }
+          ],
+          project: {
+            scope: ['design', 'fitout', 'planning'],
+            complexity: 'medium',
+            team_size: 3,
+            team_experience: 'medium'
+          }
+        };
+        
+        // Execute workflow optimization
+        console.log('Starting AI workflow optimization...');
+        const optimizedWorkflow = await aiEngine.optimizeWorkflow(workflowConfig);
+        
+        // Generate quotation if optimization successful
+        if (optimizedWorkflow && optimizedWorkflow.success) {
+          console.log('Workflow optimized, generating quotation...');
+          const quotationResult = await aiEngine.executeQuotationGeneration({
+            project_details: workflowConfig.project,
+            workflow_id: optimizedWorkflow.workflow_id,
+            priority: 'standard'
+          });
+          
+          if (quotationResult && quotationResult.success) {
+            showSuccessMessage(button, statusMessage, {
+              workflow_id: optimizedWorkflow.workflow_id,
+              quotation_id: quotationResult.quotation_id,
+              estimated_duration: optimizedWorkflow.estimated_duration
+            });
+          } else {
+            throw new Error('Quotation generation failed: ' + (quotationResult?.error || 'Unknown error'));
+          }
+        } else {
+          throw new Error('Workflow optimization failed: ' + (optimizedWorkflow?.error || 'Unknown error'));
+        }
+        
+      } catch (error) {
+        console.error('Generator trigger failed:', error);
+        showErrorMessage(button, statusMessage, error.message);
+      }
+    }
+    
+    /**
+     * Show loading state with spinner and disabled button
+     */
+    function showLoadingState(button, statusMessage) {
+      button.classList.add('loading');
+      statusMessage.className = 'status-message info';
+      statusMessage.textContent = 'AI Generator is processing your request...';
+      statusMessage.style.display = 'block';
+    }
+    
+    /**
+     * Show success message with generated results
+     */
+    function showSuccessMessage(button, statusMessage, results) {
+      button.classList.remove('loading');
+      statusMessage.className = 'status-message success';
+      statusMessage.innerHTML = `
+        <strong>✅ Generation Complete!</strong><br>
+        Workflow ID: <code>${results.workflow_id}</code><br>
+        Quotation ID: <code>${results.quotation_id}</code><br>
+        Estimated Duration: ${results.estimated_duration} days
+      `;
+      statusMessage.style.display = 'block';
+      
+      // Hide success message after 10 seconds
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 10000);
+    }
+    
+    /**
+     * Show error message with retry option
+     */
+    function showErrorMessage(button, statusMessage, errorText) {
+      button.classList.remove('loading');
+      statusMessage.className = 'status-message error';
+      statusMessage.innerHTML = `
+        <strong>❌ Generation Failed</strong><br>
+        ${errorText}<br>
+        <small>Please try again or contact support if the problem persists.</small>
+      `;
+      statusMessage.style.display = 'block';
+      
+      // Hide error message after 15 seconds
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 15000);
+    }
+  </script>
+</body>
+</html>

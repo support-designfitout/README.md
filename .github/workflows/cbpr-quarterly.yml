@@ -1,0 +1,109 @@
+name: CBPR Quarterly Readiness Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      output_format:
+        description: 'Output format (pdf or both)'
+        required: false
+        default: 'pdf'
+        type: choice
+        options:
+          - pdf
+          - both
+  schedule:
+    # Run quarterly: First day of Jan, Apr, Jul, Oct at 00:00 UTC
+    - cron: '0 0 1 1,4,7,10 *'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  generate-cbpr-report:
+    name: Generate CBPR Report
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up environment
+        run: |
+          echo "REPORT_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+          echo "REPORT_TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            poppler-utils \
+            wkhtmltopdf \
+            xvfb
+          
+          # Verify installations
+          echo "Installed tools:"
+          which pdfunite && pdfunite --version || echo "pdfunite: not available"
+          which wkhtmltopdf && wkhtmltopdf --version || echo "wkhtmltopdf: not available"
+          
+      - name: Create reports directory
+        run: mkdir -p reports
+        
+      - name: Generate CBPR PDF
+        run: |
+          echo "Generating CBPR PDF report..."
+          
+          # Run the PDF generation script with xvfb for wkhtmltopdf
+          if [ -f .github/scripts/make_cbpr_pdf.sh ]; then
+            xvfb-run -a .github/scripts/make_cbpr_pdf.sh reports
+          else
+            echo "Error: make_cbpr_pdf.sh not found!"
+            exit 1
+          fi
+          
+      - name: List generated files
+        run: |
+          echo "Generated files in reports directory:"
+          ls -lh reports/ || echo "No files generated"
+          
+      - name: Upload PDF artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbpr-report-${{ env.REPORT_TIMESTAMP }}
+          path: |
+            reports/*.pdf
+            reports/*.txt
+          retention-days: 90
+          
+      - name: Upload checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbpr-checksums-${{ env.REPORT_TIMESTAMP }}
+          path: reports/*checksums*.txt
+          retention-days: 90
+          
+      - name: Report summary
+        run: |
+          echo "## CBPR Report Generation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Report Date: ${REPORT_DATE}" >> $GITHUB_STEP_SUMMARY
+          echo "⏰ Generated: ${REPORT_TIMESTAMP}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d reports ]; then
+            echo "### Generated Files:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            ls -lh reports/ >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            
+            if [ -f reports/*checksums*.txt ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Checksums:" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              cat reports/*checksums*.txt >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Report generation complete!" >> $GITHUB_STEP_SUMMARY
