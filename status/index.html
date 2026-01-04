@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesignFitout System & Ops Status</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231a237e'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold'%3EDF%3C/text%3E%3C/svg%3E">
+    <style>
+        :root {
+            /* Sigel & Crow palette - matching brand colors */
+            --primary-color: #1a237e;
+            --secondary-color: #3949ab;
+            --accent-color: #1976d2;
+            --success-color: #2e7d32;
+            --warning-color: #f57c00;
+            --error-color: #c62828;
+            --bg-color: #f5f8fb;
+            --card-bg: #ffffff;
+            --text-primary: #1a237e;
+            --text-secondary: #546e7a;
+            --border-color: rgba(26, 35, 126, 0.1);
+            --shadow: 0 2px 8px rgba(0,0,0,0.09);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header with Logo */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        /* Telemetry Bar */
+        .telemetry-bar {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .telemetry-item {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bg-color);
+        }
+        
+        .telemetry-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .telemetry-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .telemetry-value.success {
+            color: var(--success-color);
+        }
+        
+        /* Status Cards Grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .status-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        
+        .status-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-indicator.healthy {
+            background: var(--success-color);
+            box-shadow: 0 0 8px var(--success-color);
+        }
+        
+        .status-indicator.warning {
+            background: var(--warning-color);
+            box-shadow: 0 0 8px var(--warning-color);
+        }
+        
+        .status-indicator.error {
+            background: var(--error-color);
+            box-shadow: 0 0 8px var(--error-color);
+        }
+        
+        .status-content {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .status-timestamp {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        /* Milestone Tracker */
+        .milestone-tracker {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+        
+        .milestone-tracker h2 {
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .milestone-list {
+            list-style: none;
+        }
+        
+        .milestone-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--border-color);
+            transition: border-color 0.2s ease;
+        }
+        
+        .milestone-item.complete {
+            border-left-color: var(--success-color);
+            opacity: 0.8;
+        }
+        
+        .milestone-item.in-progress {
+            border-left-color: var(--warning-color);
+        }
+        
+        .milestone-item.pending {
+            border-left-color: var(--border-color);
+        }
+        
+        .milestone-item strong {
+            color: var(--primary-color);
+        }
+        
+        .csv-link {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+        }
+        
+        .csv-link:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* Offline Mode Banner */
+        .offline-banner {
+            background: var(--warning-color);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .offline-banner.show {
+            display: block;
+        }
+        
+        /* Loading Indicator */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 32px;
+            padding: 16px;
+        }
+        
+        /* Mobile Layout - Compact stacked cards for narrow viewports */
+        @media (max-width: 500px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .logo {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+            
+            .telemetry-bar {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 12px;
+            }
+            
+            .telemetry-item {
+                padding: 8px;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .status-card {
+                padding: 16px;
+            }
+            
+            .milestone-tracker {
+                padding: 16px;
+            }
+            
+            .milestone-item {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Offline Mode Banner -->
+        <div class="offline-banner" id="offlineBanner">
+            ⚠️ Offline Mode - Displaying cached data
+        </div>
+        
+        <!-- Header with Logo -->
+        <header class="header">
+            <div class="logo">DF</div>
+            <div class="header-content">
+                <h1>DesignFitout System & Ops Status</h1>
+                <p>Real-time monitoring dashboard with live updates every 60 seconds</p>
+            </div>
+        </header>
+        
+        <!-- Telemetry Bar -->
+        <div class="telemetry-bar">
+            <div class="telemetry-item">
+                <span class="telemetry-label">Uptime</span>
+                <span class="telemetry-value success" id="uptimeValue">--</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telemetry-label">API Latency</span>
+                <span class="telemetry-value" id="latencyValue">--</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telemetry-label">Last Audit</span>
+                <span class="telemetry-value" id="auditValue" style="font-size: 1rem;">--</span>
+            </div>
+        </div>
+        
+        <!-- Status Cards Grid -->
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>
+                    <span class="status-indicator healthy" id="healthIndicator"></span>
+                    System Health
+                </h3>
+                <div class="status-content" id="healthContent">
+                    Checking system status...
+                </div>
+                <div class="status-timestamp" id="healthTimestamp"></div>
+            </div>
+            
+            <div class="status-card">
+                <h3>
+                    <span class="status-indicator healthy" id="mrketozIndicator"></span>
+                    MrketOz Pipeline
+                </h3>
+                <div class="status-content" id="mrketozContent">
+                    Loading pipeline status...
+                </div>
+                <div class="status-timestamp" id="mrketozTimestamp"></div>
+            </div>
+            
+            <div class="status-card">
+                <h3>
+                    <span class="status-indicator healthy"></span>
+                    Quick Links
+                </h3>
+                <div class="status-content">
+                    <p><a href="https://designfitout.com" target="_blank">Main Website</a></p>
+                    <p><a href="https://fitoutlab.app" target="_blank">FitOutLab Capsule</a></p>
+                    <p><a href="/api/status" target="_blank">API Status Endpoint</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Milestone Tracker -->
+        <div class="milestone-tracker">
+            <h2>📊 Bundle Milestone Tracker</h2>
+            <ul class="milestone-list" id="milestoneList">
+                <li class="milestone-item">Loading milestones...</li>
+            </ul>
+            <a href="../docs/subscription_cleanup_tracker.csv" class="csv-link" download>
+                📥 Download Full CSV Report
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <p>For more information, visit our <a href="https://designfitout.com">website</a>.</p>
+            <p style="font-size: 0.8rem; margin-top: 8px;">Auto-refreshing dashboard • Last refresh: <span id="lastRefresh">--</span></p>
+        </footer>
+    </div>
+    
+    <script>
+        // Dashboard Controller with auto-refresh and caching
+        class StatusDashboard {
+            constructor() {
+                this.refreshInterval = 60000; // 60 seconds
+                this.refreshTimer = null;
+                this.lastHealthFetch = null;
+                this.lastMrketozFetch = null;
+                this.init();
+            }
+            
+            init() {
+                this.loadData();
+                this.startAutoRefresh();
+                this.loadMilestones();
+            }
+            
+            // Start auto-refresh loop
+            startAutoRefresh() {
+                this.refreshTimer = setInterval(() => {
+                    this.loadData();
+                }, this.refreshInterval);
+            }
+            
+            // Load all dashboard data
+            async loadData() {
+                await Promise.all([
+                    this.fetchHealthStatus(),
+                    this.fetchMrketozStatus()
+                ]);
+                this.updateLastRefreshTime();
+            }
+            
+            // Fetch health status with graceful caching
+            async fetchHealthStatus() {
+                const startTime = Date.now();
+                const cacheKey = 'designfitout_health_cache';
+                
+                try {
+                    const response = await fetch('/health?trace=1');
+                    const latency = Date.now() - startTime;
+                    
+                    if (!response.ok) throw new Error('Health check failed');
+                    
+                    const data = await response.json();
+                    
+                    // Store in localStorage for offline mode
+                    localStorage.setItem(cacheKey, JSON.stringify(data));
+                    localStorage.setItem(cacheKey + '_timestamp', new Date().toISOString());
+                    
+                    this.updateHealthDisplay(data, latency, false);
+                    this.hideOfflineBanner();
+                    
+                } catch (error) {
+                    console.error('Health check error:', error);
+                    
+                    // Load from cache if available
+                    const cachedData = localStorage.getItem(cacheKey);
+                    if (cachedData) {
+                        const data = JSON.parse(cachedData);
+                        this.updateHealthDisplay(data, null, true);
+                        this.showOfflineBanner();
+                    } else {
+                        this.updateHealthDisplay(null, null, false);
+                    }
+                }
+            }
+            
+            // Fetch MrketOz pipeline status with graceful caching
+            async fetchMrketozStatus() {
+                const cacheKey = 'designfitout_mrketoz_cache';
+                
+                try {
+                    const response = await fetch('/api/mrketoz.json');
+                    
+                    if (!response.ok) throw new Error('MrketOz fetch failed');
+                    
+                    const data = await response.json();
+                    
+                    // Store in localStorage for offline mode
+                    localStorage.setItem(cacheKey, JSON.stringify(data));
+                    localStorage.setItem(cacheKey + '_timestamp', new Date().toISOString());
+                    
+                    this.updateMrketozDisplay(data, false);
+                    
+                } catch (error) {
+                    console.error('MrketOz fetch error:', error);
+                    
+                    // Load from cache if available
+                    const cachedData = localStorage.getItem(cacheKey);
+                    if (cachedData) {
+                        const data = JSON.parse(cachedData);
+                        this.updateMrketozDisplay(data, true);
+                        this.showOfflineBanner();
+                    } else {
+                        this.updateMrketozDisplay(null, false);
+                    }
+                }
+            }
+            
+            // Update health status display
+            updateHealthDisplay(data, latency, isCache) {
+                const contentEl = document.getElementById('healthContent');
+                const timestampEl = document.getElementById('healthTimestamp');
+                const indicatorEl = document.getElementById('healthIndicator');
+                const uptimeEl = document.getElementById('uptimeValue');
+                const latencyEl = document.getElementById('latencyValue');
+                const auditEl = document.getElementById('auditValue');
+                
+                if (data) {
+                    contentEl.innerHTML = `
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Service:</strong> ${data.service}</p>
+                        <p style="font-size: 0.85rem; margin-top: 8px;">
+                            ${Object.keys(data.endpoints || {}).length} endpoints available
+                        </p>
+                    `;
+                    
+                    timestampEl.textContent = `Updated: ${new Date(data.timestamp).toLocaleString()}${isCache ? ' (cached)' : ''}`;
+                    
+                    indicatorEl.className = 'status-indicator ' + (data.status === 'healthy' ? 'healthy' : 'warning');
+                    
+                    // Update telemetry
+                    if (data.telemetry) {
+                        uptimeEl.textContent = data.telemetry.uptime_percentage + '%';
+                        auditEl.textContent = new Date(data.telemetry.last_audit).toLocaleDateString();
+                    }
+                    
+                    if (latency !== null) {
+                        latencyEl.textContent = latency + 'ms';
+                    }
+                    
+                } else {
+                    contentEl.innerHTML = '<p>⚠️ Unable to load health status</p>';
+                    timestampEl.textContent = 'Status unavailable';
+                    indicatorEl.className = 'status-indicator error';
+                }
+            }
+            
+            // Update MrketOz pipeline display
+            updateMrketozDisplay(data, isCache) {
+                const contentEl = document.getElementById('mrketozContent');
+                const timestampEl = document.getElementById('mrketozTimestamp');
+                const indicatorEl = document.getElementById('mrketozIndicator');
+                
+                if (data) {
+                    contentEl.innerHTML = `
+                        <p><strong>Stage:</strong> ${data.stage}</p>
+                        <p><strong>Branch:</strong> ${data.branch}</p>
+                        <p><strong>Last PR:</strong> #${data.last_pr} - ${data.last_pr_title}</p>
+                        ${data.flags ? `<p><strong>Flags:</strong> ${data.flags.join(', ')}</p>` : ''}
+                    `;
+                    
+                    timestampEl.textContent = `Updated: ${new Date(data.updated_at).toLocaleString()}${isCache ? ' (cached)' : ''}`;
+                    
+                    indicatorEl.className = 'status-indicator healthy';
+                    
+                } else {
+                    contentEl.innerHTML = '<p>⚠️ Unable to load pipeline status</p>';
+                    timestampEl.textContent = 'Status unavailable';
+                    indicatorEl.className = 'status-indicator error';
+                }
+            }
+            
+            // Load and parse CSV milestones
+            async loadMilestones() {
+                const listEl = document.getElementById('milestoneList');
+                
+                try {
+                    const response = await fetch('../docs/subscription_cleanup_tracker.csv');
+                    if (!response.ok) throw new Error('CSV fetch failed');
+                    
+                    const csvText = await response.text();
+                    const milestones = this.parseCSV(csvText);
+                    
+                    if (milestones.length > 1) {
+                        listEl.innerHTML = '';
+                        
+                        // Skip header row
+                        for (let i = 1; i < milestones.length; i++) {
+                            const [milestone, status, targetDate, notes] = milestones[i];
+                            
+                            const li = document.createElement('li');
+                            li.className = 'milestone-item';
+                            
+                            // Determine status class
+                            if (status.includes('✓') || status.toLowerCase().includes('complete')) {
+                                li.classList.add('complete');
+                            } else if (status.toLowerCase().includes('progress')) {
+                                li.classList.add('in-progress');
+                            } else {
+                                li.classList.add('pending');
+                            }
+                            
+                            li.innerHTML = `
+                                <strong>${milestone}</strong> - ${status}
+                                <br><small>Target: ${targetDate} | ${notes}</small>
+                            `;
+                            
+                            listEl.appendChild(li);
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Milestone loading error:', error);
+                    listEl.innerHTML = '<li class="milestone-item">⚠️ Unable to load milestone data</li>';
+                }
+            }
+            
+            // Simple CSV parser
+            parseCSV(text) {
+                return text.split('\n')
+                    .filter(line => line.trim())
+                    .map(line => line.split(',').map(cell => cell.trim()));
+            }
+            
+            // Update last refresh time
+            updateLastRefreshTime() {
+                const el = document.getElementById('lastRefresh');
+                el.textContent = new Date().toLocaleTimeString();
+            }
+            
+            // Show offline banner
+            showOfflineBanner() {
+                document.getElementById('offlineBanner').classList.add('show');
+            }
+            
+            // Hide offline banner
+            hideOfflineBanner() {
+                document.getElementById('offlineBanner').classList.remove('show');
+            }
+        }
+        
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new StatusDashboard();
+        });
+    </script>
+</body>
+</html>
