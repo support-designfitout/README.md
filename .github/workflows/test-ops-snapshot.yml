@@ -1,0 +1,83 @@
+name: Test Ops Snapshot
+
+# Run on pull requests and nightly schedule
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'functions/ops/**'
+      - 'scripts/rotate-secret.sh'
+      - 'scripts/restore-snapshot.sh'
+      - 'test-ops-snapshot.js'
+      - 'package.json'
+      - '.github/workflows/test-ops-snapshot.yml'
+  
+  schedule:
+    # Run nightly at 02:10 UTC
+    - cron: '10 2 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  test-ops-snapshot:
+    name: Test Ops Snapshot Endpoint
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ops snapshot tests
+        run: npm run test:ops-snapshot
+      
+      - name: Verify scripts are executable
+        run: |
+          test -x scripts/rotate-secret.sh
+          test -x scripts/restore-snapshot.sh
+          echo "✓ All scripts are executable"
+      
+      - name: Test rotate-secret.sh (dry run)
+        run: |
+          cd scripts
+          DRY_RUN=1 bash rotate-secret.sh
+          echo "✓ Rotate secret script dry run completed"
+      
+      - name: Verify RUNBOOK.md exists
+        run: |
+          test -f RUNBOOK.md
+          echo "✓ RUNBOOK.md exists"
+      
+      - name: Check for secret leakage
+        run: |
+          # Check that no plaintext secrets are committed
+          if grep -rE "MRKETOZ_SHARED_SECRET\s*=\s*['\"][A-Za-z0-9+/]{20,}" \
+            RUNBOOK.md scripts/ functions/ops/ 2>/dev/null; then
+            echo "❌ Potential secret leakage detected!"
+            exit 1
+          fi
+          echo "✓ No secret leakage detected"
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops-snapshot-test-results
+          path: |
+            test-ops-snapshot.js
+            RUNBOOK.md
+          retention-days: 30

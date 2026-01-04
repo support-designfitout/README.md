@@ -1,0 +1,64 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+#
+# Installation:
+#   pip install pre-commit
+#   pre-commit install
+#
+# Usage:
+#   pre-commit run --all-files    # Run on all files
+#   pre-commit run                # Run on staged files
+#
+# Note: These hooks are optional but recommended for preventing
+# accidental secret commits.
+
+repos:
+  # Detect secrets and credentials
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package-lock.json
+
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Prevent committing large files
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      
+      # Ensure files end with newline
+      - id: end-of-file-fixer
+        exclude: '\.min\.(js|css)$'
+      
+      # Trim trailing whitespace
+      - id: trailing-whitespace
+        exclude: '\.min\.(js|css)$'
+      
+      # Check JSON syntax
+      - id: check-json
+        exclude: 'tsconfig\.json$'
+      
+      # Check YAML syntax
+      - id: check-yaml
+        args: ['--safe']
+      
+      # Check for merge conflicts
+      - id: check-merge-conflict
+      
+      # Prevent committing to main branch
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+
+  # TypeScript/JavaScript linting (if applicable)
+  # Uncomment if you want to run npm test on commit
+  # - repo: local
+  #   hooks:
+  #     - id: npm-test
+  #       name: npm test
+  #       entry: npm test
+  #       language: system
+  #       pass_filenames: false
+  #       always_run: true

@@ -1,0 +1,119 @@
+name: MrketOz Plan & Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - "workers/**"
+      - "tools/mrketoz-plan.ts"
+      - "tools/mrketoz-listener.mjs"
+  push:
+    branches: [main]
+    paths:
+      - "workers/**"
+      - "tools/mrketoz-plan.ts"
+      - "tools/mrketoz-listener.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    name: Plan changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Ensure jq (for JSON parsing)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Compute plan
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          node tools/mrketoz-plan.ts > plan.json
+          cat plan.json
+
+      - name: Upload plan.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: mrketoz-plan
+          path: plan.json
+
+      - name: MrketOz Listener (summarize plan)
+        run: node tools/mrketoz-listener.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # optional
+          MRK_PLAN_PATH: plan.json
+
+  deploy:
+    name: Deploy changed workers
+    # Run on merged PRs OR direct pushes to main
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push')
+    needs: plan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Ensure jq & wrangler
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          npm i -g wrangler
+
+      - name: Recompute plan (fresh)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          node tools/mrketoz-plan.ts > plan.json
+          cat plan.json
+
+      - name: Deploy create/update targets
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : > deploy.log
+          if jq -e '.create or .update' plan.json >/dev/null 2>&1; then
+            dirs=$(jq -r '[.create[]?, .update[]?] | .[]' plan.json 2>/dev/null || true)
+            if [ -n "$dirs" ]; then
+              while IFS= read -r d; do
+                echo "▶ Deploying workers/$d" | tee -a deploy.log
+                (cd "workers/$d" && wrangler deploy --minify) 2>&1 | tee -a ../deploy.log
+              done <<< "$dirs"
+            else
+              echo "No create/update entries." | tee -a deploy.log
+            fi
+          else
+            echo "Plan missing create/update arrays." | tee -a deploy.log
+          fi
+
+      - name: Upload deploy.log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mrketoz-deploy-log
+          path: workers/deploy.log
+        continue-on-error: true
+
+      - name: MrketOz Listener (summarize deploy)
+        if: always()
+        run: node tools/mrketoz-listener.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # optional
+          MRK_PLAN_PATH: plan.json
+          MRK_LOG_PATH: workers/deploy.log
