@@ -1,0 +1,117 @@
+name: Ops Snapshot Sync
+
+on:
+  schedule:
+    # Run nightly at 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+
+permissions:
+  contents: write
+
+jobs:
+  sync-snapshot:
+    name: Sync KV Snapshot to Git
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Fetch latest snapshot from KV
+        id: fetch
+        run: |
+          # Fetch the snapshot from the Cloudflare Pages Function
+          # Replace with your actual deployment URL
+          SNAPSHOT_URL="${{ secrets.OPS_SNAPSHOT_URL || 'https://app.fitoutlab.app/ops/snapshot.json' }}"
+          
+          echo "Fetching snapshot from $SNAPSHOT_URL"
+          curl -fsS "$SNAPSHOT_URL" > /tmp/ops_snapshot.json
+          
+          if [ ! -s /tmp/ops_snapshot.json ]; then
+            echo "error=Failed to fetch snapshot or empty response" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          # Validate JSON
+          if ! jq empty /tmp/ops_snapshot.json 2>/dev/null; then
+            echo "error=Invalid JSON response" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          echo "success=true" >> $GITHUB_OUTPUT
+          echo "Snapshot fetched successfully"
+          jq . /tmp/ops_snapshot.json
+      
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ ! -f milestones/OPS_SNAPSHOT.json ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "reason=New snapshot file" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Compare fetched snapshot with existing file
+          if ! diff -q /tmp/ops_snapshot.json milestones/OPS_SNAPSHOT.json > /dev/null 2>&1; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "reason=Snapshot updated" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "reason=No changes detected" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops-snapshot-${{ github.run_number }}
+          path: /tmp/ops_snapshot.json
+          retention-days: 30
+      
+      - name: Update snapshot file
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          cp /tmp/ops_snapshot.json milestones/OPS_SNAPSHOT.json
+          echo "Snapshot file updated: ${{ steps.changes.outputs.reason }}"
+      
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add milestones/OPS_SNAPSHOT.json
+          git commit -m "chore: sync ops snapshot from KV [skip ci]
+
+          Updated by nightly sync workflow
+          Reason: ${{ steps.changes.outputs.reason }}
+          Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          
+          git push
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Ops Snapshot Sync Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.fetch.outputs.success }}" == "true" ]; then
+            echo "✅ Snapshot fetched successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Failed to fetch snapshot: ${{ steps.fetch.outputs.error }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.changes.outputs.changed }}" == "true" ]; then
+            echo "✅ Changes committed: ${{ steps.changes.outputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ No changes: ${{ steps.changes.outputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Snapshot Preview" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+          jq . /tmp/ops_snapshot.json >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

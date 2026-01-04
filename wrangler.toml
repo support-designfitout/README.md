@@ -1,0 +1,22 @@
+name = "designfitout-github"
+compatibility_date = "2024-01-01"
+
+# KV Namespace bindings
+# OPS_KV stores operational snapshots and telemetry data
+[[kv_namespaces]]
+binding = "OPS_KV"
+id = "YOUR_OPS_KV_ID_HERE"
+
+# Additional KV namespaces used by the application
+[[kv_namespaces]]
+binding = "MRKETOZ_STATUS"
+id = "YOUR_MRKETOZ_STATUS_ID_HERE"
+
+[[kv_namespaces]]
+binding = "REGISTRAR_STATUS"
+id = "YOUR_REGISTRAR_STATUS_ID_HERE"
+
+# Environment variables
+[env.production]
+# MRKETOZ_SHARED_SECRET should be set via wrangler secret put command
+# or in the Cloudflare dashboard for security

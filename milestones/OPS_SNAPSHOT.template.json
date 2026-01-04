@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-01-20T12:00:00.000Z",
+  "status": "operational",
+  "metrics": {
+    "uptime_pct": 99.95,
+    "latency_ms": 150,
+    "error_count": 2,
+    "requests_24h": 15420
+  },
+  "deployments": [
+    {
+      "service": "main-site",
+      "version": "v2.4.1",
+      "deployed_at": "2025-01-20T08:30:00.000Z",
+      "status": "healthy"
+    },
+    {
+      "service": "api-functions",
+      "version": "v1.8.3",
+      "deployed_at": "2025-01-19T14:22:00.000Z",
+      "status": "healthy"
+    }
+  ],
+  "alerts": [
+    {
+      "severity": "info",
+      "message": "Scheduled maintenance window: 2025-01-22 02:00-04:00 UTC",
+      "created_at": "2025-01-20T10:00:00.000Z"
+    }
+  ],
+  "health_checks": {
+    "main_site": "pass",
+    "api_endpoints": "pass",
+    "dns_resolution": "pass",
+    "ssl_certificates": "pass"
+  },
+  "notes": "All systems operational. Recent deploy successful.",
+  "updated_by": "ops-automation"
+}
