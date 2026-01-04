@@ -1,0 +1,26 @@
+{
+  "name": "edge-cache-worker",
+  "version": "1.0.0",
+  "description": "Cloud-agnostic edge caching worker",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "node --test"
+  },
+  "keywords": [
+    "edge",
+    "cache",
+    "worker",
+    "cloudflare",
+    "aws",
+    "azure",
+    "serverless"
+  ],
+  "author": "DesignFitOut",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "api-gateway-worker",
+  "version": "1.0.0",
+  "description": "Cloud-agnostic API gateway worker",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "node --test"
+  },
+  "keywords": [
+    "api",
+    "gateway",
+    "worker",
+    "cloudflare",
+    "aws",
+    "azure",
+    "serverless"
+  ],
+  "author": "DesignFitOut",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
