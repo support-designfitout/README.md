@@ -1,0 +1,56 @@
+
+FitOut Heroes – DNS + Cloudflare Configuration Summary
+=======================================================
+
+📅 Generated on: 2025-06-12 07:31:23
+
+1. ✅ TXT RECORDS – Email Setup
+-------------------------------
+• SPF:
+  Name: fitoutheroes.tech
+  Value: v=spf1 include:zoho.com ~all
+  (Allows Zoho Mail to send emails. Replaces invalid "-all" record.)
+
+• DKIM:
+  Name: zoho._domainkey
+  Type: CNAME
+  Value: zmverify.zoho.com
+  (To be set from Zoho Mail Admin Console)
+
+• DMARC:
+  Name: _dmarc
+  Value: v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; rua=mailto:this4arun@gmail.com
+
+2. ✅ CLOUDFLARE SECURITY & PERFORMANCE SETTINGS
+-----------------------------------------------
+All key HTTPS and HTTP/3 protocols are enabled:
+
+• HTTP/2: Enabled
+• HTTP/3: Enabled
+• HTTP/2 to Origin: Enabled
+• Enhanced HTTP/2 Prioritization: Enabled
+• 0-RTT Connection Resumption: Enabled
+• Always Use HTTPS: Enabled
+• TLS 1.3: Enabled
+• Early Hints: Enabled
+
+3. 🔧 Recommended CNAME Records (if applicable)
+-----------------------------------------------
+• For Zoho Creator Portal (example):
+  Name: designfit
+  Type: CNAME
+  Value: creator.cs.zohohost.com
+
+• For Zoho Forms (example):
+  Name: quote
+  Type: CNAME
+  Value: zfsubdomain.zohopublic.com
+
+(Adjust based on your actual Zoho configuration needs.)
+
+4. 📤 Next Steps
+----------------
+• Confirm DKIM value from Zoho Mail Admin: https://mailadmin.zoho.com/cpanel/index.do#dns
+• Add/replace DNS records in Cloudflare DNS dashboard: https://dash.cloudflare.com/
+• Notify admin (this4arun@gmail.com) once updates are live for test verification.
+
