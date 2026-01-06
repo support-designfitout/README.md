@@ -1,86 +1,184 @@
-### AL ###
-# Template for AL projects for Dynamics 365 Business Central
-
-# launch.json folder
+# General OS/Editor Files (common for any project)
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+*.temp
+.idea/
 .vscode/
-# Cache folder
-.alcache/
-# Symbols folder
-.alpackages/
-# Snapshots folder
-.snapshots/
-# Testing Output folder
-.output/
-# Extension App-file
-*.app
-# Rapid Application Development File
-rad.json
-# Translation Base-file
-*.g.xlf
-# License-file
-*.flf
-# Test results file
-TestResults.xml
+*.sublime-project
+*.sublime-workspace
 
-### Node.js ###
-# Dependencies
-node_modules/
+# Logs (from your AI stack and web)
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
-# Package manager files
-package-lock.json
-yarn.lock
-
-### Playwright ###
-# Test artifacts
-/test-results/
-/playwright-report/
-/playwright/.cache/
-
-# Screenshots and videos
-/test-results/screenshots/
-/test-results/videos/
-
-# Test output
-*.spec.js
-*.spec.js.map
-
-### OS ###
-# macOS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Windows
-*.tmp
-*.temp
-*~
-
-### IDE ###
-# JetBrains
-.idea/
-*.iml
-*.iws
-*.ipr
-
-# VSCode
-.vscode/settings.json
-.vscode/tasks.json
-.vscode/launch.json
-.vscode/extensions.json
-
-### Logs ###
-*.log
-logs/
-
-### Environment ###
+# Environments/Secrets (critical for sovereign AI)
 .env
-.env.local
-.env.*.local
-validate-multi-lang.sh
+.env.*
+!.env.example
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pypirc
+
+# Python-Specific (for agents like planner_agent.py)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+*.mo
+*.pot
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+.webassets-cache
+.scrapy
+docs/_build/
+.pybuilder/
+target/
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+# .python-version (comment out if needed)
+Pipfile.lock
+uv.lock
+poetry.lock
+# poetry.toml
+pdm.lock
+# pdm.toml
+.pdm-python
+.pdm-build/
+.pixi
+__pypackages__/
+celerybeat-schedule
+celerybeat.pid
+*.rdb
+*.aof
+*.pid
+mnesia/
+rabbitmq/
+rabbitmq-data/
+activemq-data/
+*.sage.py
+.spyderproject
+.spyproject
+.ropeproject
+/site
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+.abstra/
+.ruff_cache/
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+.streamlit/secrets.toml
+
+# Web/HTML/CSS/JS-Specific (for site files like index.html, footer.html)
+node_modules/
+bower_components/
+jspm_packages/
+web_modules/
+*.tsbuildinfo
+.npm
+.eslintcache
+.stylelintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.cache
+.parcel-cache
+.next
+out
+.nuxt
+dist
+.output
+.vuepress/dist
+.temp
+.cache
+.svelte-kit/
+**/.vitepress/dist
+**/.vitepress/cache
+.docusaurus
+.serverless/
+.fusebox/
+.dynamodb/
+.firebase/
+.tern-port
+.vscode-test
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+.vite/
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+# Coverage
+coverage
+*.lcov
+.nyc_output
+# Grunt
+.grunt
+# Compiled addons
+build/Release
+# Lock files
+.lock-wscript
